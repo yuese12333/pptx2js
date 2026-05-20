@@ -17,8 +17,8 @@ describe('presentation', () => {
 
   it('读取幻灯片路径与尺寸', async () => {
     const parsed = {
-      'ppt/presentation.xml': await parseXml(presXml),
-      'ppt/_rels/presentation.xml.rels': await parseXml(relsXml),
+      'ppt/presentation.xml': parseXml(presXml),
+      'ppt/_rels/presentation.xml.rels': parseXml(relsXml),
     };
     const relIndex = buildRelationIndex(parsed);
     expect(getSlidePaths(parsed, relIndex)).toEqual(['ppt/slides/slide1.xml']);

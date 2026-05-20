@@ -1,9 +1,10 @@
 const { parseXml } = require('../../lib/xml-parser');
+const { documentRoot } = require('../../lib/xml-utils');
 const { buildRelationIndex } = require('../../lib/rels');
 const { extractSmartArt } = require('../../lib/smartart');
 
 describe('smartart', () => {
-  it('从 dgm:data 提取文本列表', async () => {
+  it('? dgm:data ??????', async () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -30,11 +31,11 @@ describe('smartart', () => {
 </Relationships>`;
 
     const parsed = {
-      'ppt/slides/_rels/slide1.xml.rels': await parseXml(slideRels),
-      'ppt/diagrams/data1.xml': await parseXml(dataXml),
+      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
+      'ppt/diagrams/data1.xml': parseXml(dataXml),
     };
     const relIndex = buildRelationIndex(parsed);
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
 
     const entity = extractSmartArt(frame, {
       slideIndex: 0,
@@ -46,10 +47,10 @@ describe('smartart', () => {
 
     expect(entity.kind).toBe('text');
     expect(entity.text.runs.map((r) => r.text).join(' ')).toContain('Node A');
-    expect(entity.degradeReason).toContain('文本列表');
+    expect(entity.degradeReason).toContain('SmartArt');
   });
 
-  it('不将 xml 属性值误收集为文本', async () => {
+  it('?? xml ?????????', async () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -75,11 +76,11 @@ describe('smartart', () => {
 </Relationships>`;
 
     const parsed = {
-      'ppt/slides/_rels/slide1.xml.rels': await parseXml(slideRels),
-      'ppt/diagrams/data1.xml': await parseXml(dataXml),
+      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
+      'ppt/diagrams/data1.xml': parseXml(dataXml),
     };
     const relIndex = buildRelationIndex(parsed);
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
 
     const entity = extractSmartArt(frame, {
       slideIndex: 0,

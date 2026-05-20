@@ -1,9 +1,10 @@
 const { parseXml } = require('../../lib/xml-parser');
+const { documentRoot } = require('../../lib/xml-utils');
 const { buildRelationIndex } = require('../../lib/rels');
 const { extractChart } = require('../../lib/chart');
 
 describe('chart cache image', () => {
-  it('仅使用图表部件 rels 中的缓存图，不用幻灯片上的其他图片', async () => {
+  it('??????? rels ?????????????????', () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -34,12 +35,12 @@ describe('chart cache image', () => {
 </Relationships>`;
 
     const parsed = {
-      'ppt/slides/_rels/slide1.xml.rels': await parseXml(slideRels),
-      'ppt/charts/chart1.xml': await parseXml(chartXml),
-      'ppt/charts/_rels/chart1.xml.rels': await parseXml(chartRels),
+      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
+      'ppt/charts/chart1.xml': parseXml(chartXml),
+      'ppt/charts/_rels/chart1.xml.rels': parseXml(chartRels),
     };
     const relIndex = buildRelationIndex(parsed);
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
 
     const entity = extractChart(frame, {
       slideIndex: 0,
@@ -51,6 +52,6 @@ describe('chart cache image', () => {
 
     expect(entity.kind).toBe('image');
     expect(entity.image.fileName).toBe('chart-cache.png');
-    expect(entity.degradeReason).toContain('缓存图片');
+    expect(entity.degradeReason).toMatch(/\u7f13\u5b58\u56fe\u7247/);
   });
 });

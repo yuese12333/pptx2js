@@ -44,10 +44,10 @@ describe('hyperlink', () => {
 </Relationships>`;
 
     const parsed = {
-      'ppt/presentation.xml': await parseXml(presXml),
-      'ppt/_rels/presentation.xml.rels': await parseXml(presRels),
-      'ppt/slides/slide1.xml': await parseXml(slideXml),
-      'ppt/slides/_rels/slide1.xml.rels': await parseXml(slideRels),
+      'ppt/presentation.xml': parseXml(presXml),
+      'ppt/_rels/presentation.xml.rels': parseXml(presRels),
+      'ppt/slides/slide1.xml': parseXml(slideXml),
+      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
     };
 
     const relIndex = buildRelationIndex(parsed);

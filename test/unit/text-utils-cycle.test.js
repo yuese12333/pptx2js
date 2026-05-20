@@ -1,27 +1,25 @@
+/**
+ * 确保 table 通过 text-utils 取到 extractTextRuns（非循环依赖下的 undefined）
+ */
+const { extractTable } = require('../../lib/table');
 const { parseXml } = require('../../lib/xml-parser');
 const { documentRoot } = require('../../lib/xml-utils');
-const { extractTable } = require('../../lib/table');
 
-describe('table cell text styles', () => {
-  it('?????? bold ?????', async () => {
+describe('text-utils cycle break', () => {
+  it('表格单元格能提取多 run 文本', () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-  <p:xfrm><a:off x="0" y="0"/><a:ext cx="3000000" cy="2000000"/></p:xfrm>
+  <p:xfrm><a:off x="0" y="0"/><a:ext cx="4000000" cy="2000000"/></p:xfrm>
   <a:graphic>
     <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">
       <a:tbl>
         <a:tblGrid><a:gridCol w="2000000"/></a:tblGrid>
         <a:tr>
           <a:tc>
-            <a:tcPr><a:solidFill><a:srgbClr val="4472C4"/></a:solidFill></a:tcPr>
             <a:txBody>
-              <a:p>
-                <a:r>
-                  <a:rPr b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:rPr>
-                  <a:t>??</a:t>
-                </a:r>
-              </a:p>
+              <a:bodyPr/>
+              <a:p><a:r><a:rPr b="1"/><a:t>粗体</a:t></a:r></a:p>
             </a:txBody>
           </a:tc>
         </a:tr>
@@ -34,14 +32,10 @@ describe('table cell text styles', () => {
     const entity = extractTable(frame, {
       slideIndex: 0,
       slidePath: 'ppt/slides/slide1.xml',
-      offset: { x: 0, y: 0 },
       scheme: {},
     });
-
-    const cell = entity.table.rows[0][0];
-    expect(cell.text).toBe('??');
-    expect(cell.options.bold).toBe(true);
-    expect(cell.options.color).toBe('FFFFFF');
-    expect(cell.options.fill).toBe('4472C4');
+    expect(entity).not.toBeNull();
+    expect(entity.table.rows[0][0].text).toBe('粗体');
+    expect(entity.table.rows[0][0].options.bold).toBe(true);
   });
 });

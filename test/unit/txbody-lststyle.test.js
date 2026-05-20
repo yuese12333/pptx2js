@@ -14,8 +14,7 @@ describe('txBody lstStyle', () => {
   </a:p>
 </a:txBody>`;
 
-    const doc = await parseXml(txBodyXml);
-    const txBody = doc['a:txBody'];
+    const txBody = parseXml(txBodyXml);
     const runs = extractTextRuns(txBody, {}, null);
 
     expect(runs[0].options.align).toBe('center');

@@ -41,9 +41,9 @@ describe('paragraph format', () => {
 </Relationships>`;
 
     const parsed = {
-      'ppt/presentation.xml': await parseXml(presXml),
-      'ppt/_rels/presentation.xml.rels': await parseXml(presRels),
-      'ppt/slides/slide1.xml': await parseXml(slideXml),
+      'ppt/presentation.xml': parseXml(presXml),
+      'ppt/_rels/presentation.xml.rels': parseXml(presRels),
+      'ppt/slides/slide1.xml': parseXml(slideXml),
     };
     const relIndex = buildRelationIndex(parsed);
     const ctx = { relIndex, parsed };

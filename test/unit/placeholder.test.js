@@ -1,10 +1,23 @@
 const { parseXml } = require('../../lib/xml-parser');
 const { buildRelationIndex } = require('../../lib/rels');
+const { child, children, documentRoot } = require('../../lib/xml-utils');
 const {
   buildSlideInheritance,
   mergeXfrm,
   getEffectiveXfrm,
 } = require('../../lib/placeholder');
+
+function makeXfrm(offAttrs, extAttrs) {
+  return {
+    tag: 'a:xfrm',
+    attrs: {},
+    children: [
+      { tag: 'a:off', attrs: offAttrs, children: [], text: '' },
+      { tag: 'a:ext', attrs: extAttrs, children: [], text: '' },
+    ],
+    text: '',
+  };
+}
 
 describe('placeholder', () => {
   const layoutXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -38,11 +51,11 @@ describe('placeholder', () => {
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
 </Relationships>`;
 
-  it('从 layout 层继承 xfrm 尺寸', async () => {
+  it('? layout ??? xfrm ??', () => {
     const parsed = {
-      'ppt/slides/slide1.xml': await parseXml(slideXml),
-      'ppt/slides/_rels/slide1.xml.rels': await parseXml(slideRels),
-      'ppt/slideLayouts/slideLayout1.xml': await parseXml(layoutXml),
+      'ppt/slides/slide1.xml': parseXml(slideXml),
+      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
+      'ppt/slideLayouts/slideLayout1.xml': parseXml(layoutXml),
     };
     const relIndex = buildRelationIndex(parsed);
     const inheritance = buildSlideInheritance(
@@ -53,7 +66,8 @@ describe('placeholder', () => {
 
     expect(inheritance.layoutPath).toBe('ppt/slideLayouts/slideLayout1.xml');
 
-    const sp = parsed['ppt/slides/slide1.xml']['p:sld']['p:cSld']['p:spTree']['p:sp'];
+    const slide = documentRoot(parsed['ppt/slides/slide1.xml'], 'p:sld');
+    const sp = children(child(child(slide, 'p:cSld'), 'p:spTree'), 'p:sp')[0];
     const xfrm = getEffectiveXfrm(sp, inheritance);
     const { boundsFromXfrm } = require('../../lib/utils/bounds');
     const bounds = boundsFromXfrm(xfrm);
@@ -62,23 +76,23 @@ describe('placeholder', () => {
     expect(bounds.h).toBeGreaterThan(1);
   });
 
-  it('off 与 ext 逐属性独立继承（slide 无 xfrm 时用 layout）', () => {
+  it('off ? ext ????????slide ? xfrm ?? layout?', () => {
     const merged = mergeXfrm(
       null,
-      { 'a:off': { $: { x: '100', y: '200' } }, 'a:ext': { $: { cx: '300', cy: '400' } } },
+      makeXfrm({ x: '100', y: '200' }, { cx: '300', cy: '400' }),
       null
     );
-    expect(merged['a:off'].$).toEqual({ x: '100', y: '200' });
-    expect(merged['a:ext'].$).toEqual({ cx: '300', cy: '400' });
+    expect(child(merged, 'a:off').attrs).toEqual({ x: '100', y: '200' });
+    expect(child(merged, 'a:ext').attrs).toEqual({ cx: '300', cy: '400' });
   });
 
-  it('slide 显式 cx/cy 为 0 时跳过并继承 layout 尺寸', () => {
+  it('slide ?? cx/cy ? 0 ?????? layout ??', () => {
     const merged = mergeXfrm(
-      { 'a:off': { $: { x: '0', y: '0' } }, 'a:ext': { $: { cx: '0', cy: '0' } } },
-      { 'a:off': { $: { x: '100', y: '200' } }, 'a:ext': { $: { cx: '300', cy: '400' } } },
+      makeXfrm({ x: '0', y: '0' }, { cx: '0', cy: '0' }),
+      makeXfrm({ x: '100', y: '200' }, { cx: '300', cy: '400' }),
       null
     );
-    expect(merged['a:off'].$).toEqual({ x: '0', y: '0' });
-    expect(merged['a:ext'].$).toEqual({ cx: '300', cy: '400' });
+    expect(child(merged, 'a:off').attrs).toEqual({ x: '0', y: '0' });
+    expect(child(merged, 'a:ext').attrs).toEqual({ cx: '300', cy: '400' });
   });
 });

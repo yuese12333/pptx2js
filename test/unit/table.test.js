@@ -20,8 +20,8 @@ describe('table', () => {
   </a:graphic>
 </p:graphicFrame>`;
 
-    const doc = await parseXml(frameXml);
-    const frame = doc['p:graphicFrame'];
+    const { documentRoot } = require('../../lib/xml-utils');
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
     const entity = extractTable(frame, {
       slideIndex: 0,
       slidePath: 'ppt/slides/slide1.xml',

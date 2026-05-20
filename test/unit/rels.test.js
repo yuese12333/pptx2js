@@ -29,7 +29,7 @@ describe('rels', () => {
   <Relationship Id="rId2" Type="http://example/slide" Target="slides/slide1.xml"/>
 </Relationships>`;
     const parsed = {
-      'ppt/_rels/presentation.xml.rels': await parseXml(relsXml),
+      'ppt/_rels/presentation.xml.rels': parseXml(relsXml),
     };
     const index = buildRelationIndex(parsed);
     expect(index.resolve('ppt/presentation.xml', 'rId2')).toBe(

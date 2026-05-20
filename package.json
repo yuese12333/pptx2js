@@ -1,6 +1,6 @@
 {
   "name": "pptx2js",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "将 .pptx 文件转换为可运行的 PptxGenJS 生成脚本",
   "main": "lib/index.js",
   "bin": {
@@ -28,8 +28,7 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
-    "jszip": "^3.10.1",
-    "xml2js": "^0.6.2"
+    "jszip": "^3.10.1"
   },
   "devDependencies": {
     "jest": "^29.7.0"

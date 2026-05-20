@@ -2,21 +2,27 @@ const { parseXml } = require('../../lib/xml-parser');
 const { buildRelationIndex } = require('../../lib/rels');
 const { extractEntities } = require('../../lib/extractor');
 
-describe('extractor image', () => {
-  it('从 a:blip 的 r:embed 属性解析图片', async () => {
+describe('shape without text', () => {
+  it('无文本但�?prstGeom �?schemeClr 填充时仍提取形状', async () => {
     const slideXml = `<?xml version="1.0" encoding="UTF-8"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-  xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <p:cSld>
     <p:spTree>
-      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
+      <p:nvGrpSpPr><p:cNvPr id="1"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
       <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm></p:grpSpPr>
-      <p:pic>
-        <p:nvPicPr><p:cNvPr id="2" name="pic"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>
-        <p:blipFill><a:blip r:embed="rId2"/></p:blipFill>
-        <p:spPr><a:xfrm><a:off x="1000000" y="1000000"/><a:ext cx="2000000" cy="2000000"/></a:xfrm></p:spPr>
-      </p:pic>
+      <p:sp>
+        <p:nvSpPr><p:cNvPr id="2"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="914400" y="914400"/><a:ext cx="2000000" cy="1000000"/></a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:solidFill>
+            <a:schemeClr val="accent6">
+              <a:lumMod val="60000"/>
+            </a:schemeClr>
+          </a:solidFill>
+        </p:spPr>
+      </p:sp>
     </p:spTree>
   </p:cSld>
 </p:sld>`;
@@ -33,24 +39,16 @@ describe('extractor image', () => {
   <Relationship Id="rId1" Type="slide" Target="slides/slide1.xml"/>
 </Relationships>`;
 
-    const slideRels = `<?xml version="1.0" encoding="UTF-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId2" Type="image" Target="../media/image1.png"/>
-</Relationships>`;
-
     const parsed = {
       'ppt/presentation.xml': parseXml(presXml),
       'ppt/_rels/presentation.xml.rels': parseXml(presRels),
       'ppt/slides/slide1.xml': parseXml(slideXml),
-      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
     };
-
     const relIndex = buildRelationIndex(parsed);
     const entities = extractEntities({ relIndex, parsed });
-    const images = entities[0].filter((e) => e.kind === 'image');
 
-    expect(images).toHaveLength(1);
-    expect(images[0].image.zipPath).toBe('ppt/media/image1.png');
-    expect(images[0].image.fileName).toBe('image1.png');
+    const shapes = entities[0].filter((e) => e.kind === 'shape' && e.shape?.type === 'RECTANGLE');
+    expect(shapes.length).toBe(1);
+    expect(shapes[0].shape.fill).toBeTruthy();
   });
 });

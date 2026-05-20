@@ -1,8 +1,9 @@
 const { parseXml } = require('../../lib/xml-parser');
+const { documentRoot } = require('../../lib/xml-utils');
 const { extractTable } = require('../../lib/table');
 
 describe('table border', () => {
-  it('提取单元格四边边框', async () => {
+  it('?????????', async () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
@@ -24,7 +25,7 @@ describe('table border', () => {
   </a:graphic>
 </p:graphicFrame>`;
 
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
     const entity = extractTable(frame, {
       slideIndex: 0,
       slidePath: 'ppt/slides/slide1.xml',
@@ -37,7 +38,7 @@ describe('table border', () => {
     expect(cell.options.border.left.pt).toBe(1);
   });
 
-  it('四边一致时合并为简写 border', async () => {
+  it('?????????? border', async () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
@@ -62,7 +63,7 @@ describe('table border', () => {
   </a:graphic>
 </p:graphicFrame>`;
 
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
     const entity = extractTable(frame, {
       slideIndex: 0,
       slidePath: 'ppt/slides/slide1.xml',
@@ -77,7 +78,7 @@ describe('table border', () => {
     });
   });
 
-  it('边框色误写入 solidFill 时不提取单元格 fill', async () => {
+  it('?????? solidFill ??????? fill', async () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
@@ -103,7 +104,7 @@ describe('table border', () => {
   </a:graphic>
 </p:graphicFrame>`;
 
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
     const entity = extractTable(frame, {
       slideIndex: 0,
       slidePath: 'ppt/slides/slide1.xml',

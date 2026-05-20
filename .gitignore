@@ -7,3 +7,4 @@ coverage/
 Thumbs.db
 .env
 .env.*
+scripts/debug-*.js

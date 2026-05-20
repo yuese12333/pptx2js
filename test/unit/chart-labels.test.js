@@ -1,9 +1,10 @@
 const { parseXml } = require('../../lib/xml-parser');
+const { documentRoot } = require('../../lib/xml-utils');
 const { buildRelationIndex } = require('../../lib/rels');
 const { extractChart } = require('../../lib/chart');
 
 describe('chart labels and title', () => {
-  it('读取 multiLvlStrRef 分类标签与 chart 级 title', async () => {
+  it('?? multiLvlStrRef ????? chart ? title', async () => {
     const frameXml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -22,12 +23,12 @@ describe('chart labels and title', () => {
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <c:chart>
     <c:title>
-      <c:tx><c:rich><a:p><a:r><a:t>季度销量</a:t></a:r></a:p></c:rich></c:tx>
+      <c:tx><c:rich><a:p><a:r><a:t>????</a:t></a:r></a:p></c:rich></c:tx>
     </c:title>
     <c:plotArea>
       <c:barChart>
         <c:ser>
-          <c:tx><c:strRef><c:strCache><c:pt idx="0"><c:v>销量</c:v></c:pt></c:strCache></c:strRef></c:tx>
+          <c:tx><c:strRef><c:strCache><c:pt idx="0"><c:v>??</c:v></c:pt></c:strCache></c:strRef></c:tx>
           <c:cat>
             <c:multiLvlStrRef>
               <c:multiLvlStrCache>
@@ -54,11 +55,11 @@ describe('chart labels and title', () => {
 </Relationships>`;
 
     const parsed = {
-      'ppt/slides/_rels/slide1.xml.rels': await parseXml(slideRels),
-      'ppt/charts/chart1.xml': await parseXml(chartXml),
+      'ppt/slides/_rels/slide1.xml.rels': parseXml(slideRels),
+      'ppt/charts/chart1.xml': parseXml(chartXml),
     };
     const relIndex = buildRelationIndex(parsed);
-    const frame = (await parseXml(frameXml))['p:graphicFrame'];
+    const frame = documentRoot(parseXml(frameXml), 'p:graphicFrame');
 
     const entity = extractChart(frame, {
       slideIndex: 0,
@@ -69,7 +70,7 @@ describe('chart labels and title', () => {
     });
 
     expect(entity.kind).toBe('chart');
-    expect(entity.chart.title).toBe('季度销量');
+    expect(entity.chart.title).toBe('????');
     expect(entity.chart.data[0].labels).toEqual(['Q1', 'Q2']);
   });
 });

@@ -1,18 +1,21 @@
 const { parseXml } = require('../../lib/xml-parser');
+const { child, children } = require('../../lib/xml-utils');
 
 describe('xml-parser', () => {
-  it('解析带子节点命名空间前缀的 XML', async () => {
+  it('????????????? XML', () => {
     const xml = '<root xmlns:a="http://example"><a:r>text</a:r></root>';
-    const doc = await parseXml(xml);
-    expect(doc).toBeDefined();
-    expect(doc.root).toBeDefined();
+    const doc = parseXml(xml);
+    expect(doc.tag).toBe('root');
+    expect(children(doc, 'a:r')).toHaveLength(1);
+    expect(children(doc, 'a:r')[0].text).toBe('text');
   });
 
-  it('单子节点不包裹为数组（explicitArray: false）', async () => {
+  it('???? children ?????', () => {
     const xml = '<p:sld><p:cSld><p:spTree/></p:cSld></p:sld>';
-    const doc = await parseXml(xml);
-    const sld = doc['p:sld'];
-    expect(sld).toBeDefined();
-    expect(Array.isArray(sld)).toBe(false);
+    const doc = parseXml(xml);
+    expect(doc.tag).toBe('p:sld');
+    const spTree = child(child(doc, 'p:cSld'), 'p:spTree');
+    expect(spTree).toBeDefined();
+    expect(Array.isArray(spTree.children)).toBe(true);
   });
 });
