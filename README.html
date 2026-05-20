@@ -459,6 +459,31 @@
     color: var(--ink);
   }
 
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .badge-full { background: var(--full-bg); color: var(--full); }
+  .badge-degrade { background: var(--degrade-bg); color: var(--degrade); }
+  .badge-skip { background: var(--skip-bg); color: var(--skip); }
+  .badge-plan { background: #eee; color: #666; }
+
+  .callout-note {
+    background: #fff8e1;
+    border-left: 3px solid #f0a500;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+    color: #6b4c00;
+    border-radius: 0 4px 4px 0;
+    max-width: 700px;
+  }
+
   @media (max-width: 900px) {
     nav { display: none; }
     main { margin-left: 0; }
@@ -476,9 +501,11 @@
     <li class="section-label">概述</li>
     <li><a href="#philosophy">核心哲学</a></li>
     <li><a href="#features">功能特性</a></li>
+    <li><a href="#capabilities">转换能力</a></li>
     <li class="section-label">使用</li>
     <li><a href="#install">安装</a></li>
     <li><a href="#usage">使用方式</a></li>
+    <li><a href="#run-output">运行脚本</a></li>
     <li><a href="#output">输出结构</a></li>
     <li class="section-label">技术</li>
     <li><a href="#architecture">系统架构</a></li>
@@ -505,11 +532,11 @@
       生成脚本，并附带媒体资源与转换报告。
     </p>
     <p class="hero-desc" style="margin-top:12px;font-size:13px">
-      完整设计文档见 <a href="./design.html">design.html</a>
+      <a href="./design.html">设计文档</a> · <a href="./README.md">Markdown 版</a>
     </p>
     <div class="hero-meta">
       <span><strong>运行环境</strong>Node.js ≥ 18</span>
-      <span><strong>版本</strong>v0.1.0</span>
+      <span><strong>版本</strong>v0.4.0</span>
       <span><strong>许可</strong>MIT</span>
       <span><strong>仓库</strong>GitHub 开源</span>
     </div>
@@ -529,17 +556,17 @@
           <tr class="row-full">
             <td>精确转换</td>
             <td>PptxGenJS 原生支持的元素一比一映射</td>
-            <td>文本框、图片、基本形状、表格、图表</td>
+            <td>文本框、图片、基本形状、线条、纯色背景</td>
           </tr>
           <tr class="row-degrade">
             <td>退化转换</td>
             <td>尽力保留内容，降级为近似表示</td>
-            <td>渐变→纯色、SmartArt→截图或文本列表</td>
+            <td>渐变→纯色、未知形状→矩形</td>
           </tr>
           <tr class="row-skip">
             <td>静默跳过</td>
             <td>记录日志，不中断流程</td>
-            <td>ActiveX、OLE、VBA、嵌入字体</td>
+            <td>图表/表格框架、ActiveX、OLE、VBA</td>
           </tr>
         </tbody>
       </table>
@@ -549,11 +576,31 @@
     <section class="section" id="features">
       <div class="section-header"><h2 class="section-title">功能特性</h2></div>
       <ul class="feature-list">
-        <li>输入 <code>.pptx</code>，输出 <code>output.js</code> + <code>media/</code> + <code>conversion.log</code></li>
+        <li>输入 <code>.pptx</code>，输出 <code>output.js</code> + <code>media/</code> + <code>conversion.log</code> + 自动生成说明</li>
         <li>同时提供 <strong>CLI</strong> 与 <strong>编程 API</strong>，共用同一套核心逻辑</li>
         <li>转换报告为 JSON，含 <code>slideIndex</code>、<code>elementBounds</code>、<code>severity</code>，便于 CI 集成</li>
         <li>仅支持 OOXML（<code>.pptx</code>），不做双向转换、不做 GUI</li>
       </ul>
+    </section>
+
+    <!-- 转换能力 -->
+    <section class="section" id="capabilities">
+      <div class="section-header"><h2 class="section-title">当前转换能力（v0.4.0）</h2></div>
+      <table>
+        <thead><tr><th>元素</th><th>状态</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>文本框（段落对齐、lvl 缩进、段距、行距、列表、超链接）</td><td><span class="badge badge-full">精确</span></td><td><code>addText()</code></td></tr>
+          <tr><td>图片</td><td><span class="badge badge-full">精确</span></td><td><code>addImage()</code></td></tr>
+          <tr><td>表格（含单元格边框）</td><td><span class="badge badge-full">精确</span></td><td><code>addTable()</code></td></tr>
+          <tr><td>图表 BAR/LINE/PIE/AREA/DOUGHNUT/SCATTER/RADAR/BUBBLE</td><td><span class="badge badge-full">精确</span></td><td><code>addChart()</code></td></tr>
+          <tr><td>形状 / 背景 / 组合</td><td><span class="badge badge-full">精确</span></td><td><code>addShape()</code> 等</td></tr>
+          <tr><td>母版/版式占位符</td><td><span class="badge badge-full">精确</span></td><td><code>placeholder.js</code></td></tr>
+          <tr><td>SmartArt</td><td><span class="badge badge-degrade">退化</span></td><td>文本列表或占位；缓存 PNG 暂不实现</td></tr>
+          <tr><td>渐变 / 未知形状</td><td><span class="badge badge-degrade">退化</span></td><td>首色标、矩形 fallback</td></tr>
+          <tr><td>不支持图表</td><td><span class="badge badge-degrade">退化</span></td><td>缓存图或占位文本</td></tr>
+          <tr><td>复杂动画</td><td><span class="badge badge-plan">计划</span></td><td>design.html</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <!-- 安装 -->
@@ -563,7 +610,8 @@
       <p>本地开发：</p>
       <pre class="shell"><span class="prompt">$</span>git clone https://github.com/yuese12333/pptx2js.git
 <span class="prompt">$</span>cd pptx2js
-<span class="prompt">$</span>npm install</pre>
+<span class="prompt">$</span>npm install
+<span class="prompt">$</span>npm test</pre>
     </section>
 
     <!-- 使用方式 -->
@@ -583,9 +631,13 @@
           <tr><td>--strict-degrade</td><td>false</td><td>任意退化项触发非零退出码</td></tr>
           <tr><td>--strict-skip</td><td>false</td><td><code>severity:error</code> 跳过项触发非零退出码</td></tr>
           <tr><td>--log-level</td><td>info</td><td><code>minimal</code> / <code>info</code> / <code>verbose</code></td></tr>
-          <tr><td>--max-file-size</td><td>50MB</td><td>超过阈值切换流式解析</td></tr>
+          <tr><td>--max-file-size</td><td>50MB</td><td>超过阈值切换流式解析（实现中）</td></tr>
         </tbody>
       </table>
+
+      <div class="callout-note">
+        Commander 的 <code>--no-media</code> 对应内部选项 <code>media</code>（默认 <code>true</code>）。传入 <code>--no-media</code> 后才会跳过媒体提取。
+      </div>
 
       <h3>编程 API</h3>
       <pre class="js"><span class="kw">const</span> { <span class="fn">convert</span> } = <span class="kw">require</span>(<span class="str">'pptx2js'</span>);
@@ -596,7 +648,18 @@
 });
 
 console.log(result.scriptPath);  <span class="com">// .../output.js</span>
-console.log(result.logPath);     <span class="com">// .../conversion.log</span></pre>
+console.log(result.logPath);     <span class="com">// .../conversion.log</span>
+console.log(result.log.statistics);</pre>
+    </section>
+
+    <!-- 运行生成脚本 -->
+    <section class="section" id="run-output">
+      <div class="section-header"><h2 class="section-title">运行生成脚本</h2></div>
+      <p><code>output.js</code> 依赖 <a href="https://github.com/gitbrent/PptxGenJS" target="_blank" rel="noopener">PptxGenJS</a>，需在输出目录单独安装：</p>
+      <pre class="shell"><span class="prompt">$</span>cd pptx2js-output
+<span class="prompt">$</span>npm init -y
+<span class="prompt">$</span>npm install pptxgenjs
+<span class="prompt">$</span>node output.js   <span class="com" style="color:#666"># 生成 output.pptx</span></pre>
     </section>
 
     <!-- 输出目录结构 -->
@@ -622,11 +685,11 @@ console.log(result.logPath);     <span class="com">// .../conversion.log</span><
         </div>
         <div class="pipeline-step">
           <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-          <div class="pipeline-box"><strong>② XML 预解析</strong> — lib/xml-parser.js</div>
+          <div class="pipeline-box"><strong>② XML 预解析</strong> — lib/xml-parser.js + lib/rels.js</div>
         </div>
         <div class="pipeline-step">
           <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-          <div class="pipeline-box"><strong>③ 实体提取器</strong> — lib/extractor.js</div>
+          <div class="pipeline-box"><strong>③ 实体提取器</strong> — extractor, placeholder, table, chart, smartart</div>
         </div>
         <div class="pipeline-step">
           <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
@@ -642,6 +705,7 @@ console.log(result.logPath);     <span class="com">// .../conversion.log</span><
         </div>
         <div class="pipeline-io out">output.js + media/ + conversion.log</div>
       </div>
+      <p style="margin-top:16px;font-size:13px;color:var(--ink-faint)">辅助模块：<code>lib/presentation.js</code>、<code>lib/graphic.js</code>、<code>lib/smartart.js</code>、<code>lib/xml-utils.js</code>、<code>lib/utils/color.js</code>、<code>lib/utils/bounds.js</code></p>
     </section>
 
     <!-- 技术栈 -->
@@ -654,7 +718,7 @@ console.log(result.logPath);     <span class="com">// .../conversion.log</span><
           <tr><td>XML 解析</td><td><a href="https://www.npmjs.com/package/xml2js" target="_blank" rel="noopener">xml2js</a>（统一配置，见 <code>lib/xml-parser.js</code>）</td></tr>
           <tr><td>CLI</td><td><a href="https://www.npmjs.com/package/commander" target="_blank" rel="noopener">Commander.js</a></td></tr>
           <tr><td>终端输出</td><td><a href="https://www.npmjs.com/package/chalk" target="_blank" rel="noopener">chalk</a></td></tr>
-          <tr><td>测试</td><td><a href="https://jestjs.io/" target="_blank" rel="noopener">Jest</a></td></tr>
+          <tr><td>测试</td><td><a href="https://jestjs.io/" target="_blank" rel="noopener">Jest</a>（单元 + 集成）</td></tr>
         </tbody>
       </table>
       <p>代码格式化在生成阶段自实现缩进拼接，不引入 Prettier。</p>
@@ -663,26 +727,34 @@ console.log(result.logPath);     <span class="com">// .../conversion.log</span><
     <!-- 开发 -->
     <section class="section" id="dev">
       <div class="section-header"><h2 class="section-title">开发</h2></div>
-      <pre class="shell"><span class="prompt">$</span>npm test              <span class="com" style="color:#666"># 运行单元测试</span>
+      <pre class="shell"><span class="prompt">$</span>npm test              <span class="com" style="color:#666"># 24 用例（单元 + 集成）</span>
 <span class="prompt">$</span>npm run test:watch    <span class="com" style="color:#666"># 监听模式</span></pre>
 
       <h3>目录结构</h3>
       <pre class="tree">pptx2js/
-├── bin/pptx2js.js       # CLI 入口
+├── bin/pptx2js.js          # CLI 入口
 ├── lib/
-│   ├── index.js         # 库入口（export convert）
-│   ├── convert.js       # 流水线编排
-│   ├── unpacker.js      # ① 解压与索引
-│   ├── xml-parser.js    # ② XML 统一解析
-│   ├── extractor.js     # ③ 实体提取
-│   ├── mapper.js        # ④ 映射引擎
-│   ├── codegen.js       # ⑤ 代码生成
-│   ├── packager.js      # ⑥ 资源打包
-│   └── utils/           # EMU、颜色等工具
+│   ├── convert.js           # 流水线编排
+│   ├── unpacker.js          # ① 解压
+│   ├── xml-parser.js        # ② 统一 XML 解析
+│   ├── rels.js              # ② 关系索引
+│   ├── presentation.js      # 幻灯片列表 / 尺寸
+│   ├── placeholder.js       # 母版/版式占位符
+│   ├── graphic.js           # graphicFrame 识别
+│   ├── table.js             # 表格提取
+│   ├── chart.js             # 图表提取
+│   ├── smartart.js          # SmartArt 退化
+│   ├── extractor.js         # ③ 实体提取
+│   ├── mapper.js            # ④ IR 映射
+│   ├── codegen.js           # ⑤ 代码生成
+│   ├── packager.js          # ⑥ 资源打包
+│   └── utils/               # EMU、颜色
 ├── test/
 │   ├── unit/
-│   └── fixtures/        # 测试用 PPTX / 金标准
-└── design.html          # 完整设计文档</pre>
+│   ├── integration/
+│   └── helpers/
+├── design.html
+└── README.html</pre>
     </section>
 
     <!-- 已知局限 -->
@@ -690,11 +762,14 @@ console.log(result.logPath);     <span class="com">// .../conversion.log</span><
       <div class="section-header"><h2 class="section-title">已知局限</h2></div>
       <ul class="limits-list">
         <li><span class="limit-num">L1</span><span><strong>字体</strong>依赖运行环境，不负责检测或打包嵌入字体</span></li>
-        <li><span class="limit-num">L2</span><span><strong>动画</strong>统一退化为淡入 0.5s（设计取舍）</span></li>
-        <li><span class="limit-num">L3</span><span><strong>不保证</strong>往返 PPTX 二进制一致，追求视觉可接受</span></li>
-        <li><span class="limit-num">L4</span><span><strong>不支持</strong>密码保护或 <code>.ppt</code> 旧格式</span></li>
-        <li><span class="limit-num">L5</span><span><strong>不支持</strong>增量转换，每次全量重写</span></li>
-        <li><span class="limit-num">L6</span><span><strong>大文件</strong>（200MB+）可能内存压力较大，超过 50MB 将启用流式解析（实现中）</span></li>
+        <li><span class="limit-num">L2</span><span><strong>母版继承</strong>已实现 xfrm 与基础 txBody；复杂列表样式继承仍有限；<code>a:spcPct</code> 百分比段距/行距暂不处理</span></li>
+        <li><span class="limit-num">L3</span><span><strong>SmartArt</strong> 仅文本列表退化，缓存图片因 PPT 版本差异未实现</span></li>
+        <li><span class="limit-num">L4</span><span><strong>动画</strong>尚未转换（设计为退化淡入，待实现）</span></li>
+        <li><span class="limit-num">L5</span><span><strong>不保证</strong>往返 PPTX 二进制一致，追求视觉可接受</span></li>
+        <li><span class="limit-num">L6</span><span><strong>不支持</strong>密码保护或 <code>.ppt</code> 旧格式</span></li>
+        <li><span class="limit-num">L7</span><span><strong>不支持</strong>增量转换，每次全量重写</span></li>
+        <li><span class="limit-num">L8</span><span><strong>大文件</strong>流式解析仍在实现中</span></li>
+        <li><span class="limit-num">L9</span><span><strong>媒体重名</strong>同名文件可能互相覆盖（packager 待去重）</span></li>
       </ul>
     </section>
 
@@ -702,7 +777,7 @@ console.log(result.logPath);     <span class="com">// .../conversion.log</span><
     <section class="section" id="status">
       <div class="section-header"><h2 class="section-title">项目状态</h2></div>
       <div class="status-banner">
-        当前为 <strong>v0.1.0 初始化骨架</strong>：流水线模块已就位，核心转换逻辑（实体提取、映射、代码生成）仍在实现中。运行转换会生成占位 <code>output.js</code> 与完整输出目录结构，欢迎贡献。
+        当前为 <strong>v0.4.0</strong>：在 v0.3.0 基础上新增段落级格式、表格单元格边框、扩展图表类型、SmartArt 文本列表退化。复杂动画、SmartArt 缓存图、外部链接表格等按 <a href="./design.html" style="color:var(--accent)">design.html</a> 继续推进，欢迎贡献。
       </div>
       <p class="license" style="margin-top:32px;border:none;padding:0">License: MIT</p>
     </section>
