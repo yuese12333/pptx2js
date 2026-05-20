@@ -1,0 +1,37 @@
+{
+  "name": "pptx2js",
+  "version": "0.1.0",
+  "description": "将 .pptx 文件转换为可运行的 PptxGenJS 生成脚本",
+  "main": "lib/index.js",
+  "bin": {
+    "pptx2js": "bin/pptx2js.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "pptx",
+    "pptxgenjs",
+    "converter",
+    "powerpoint"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^12.1.0",
+    "jszip": "^3.10.1",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "files": [
+    "lib",
+    "bin"
+  ]
+}

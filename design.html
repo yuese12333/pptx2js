@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPTX → PptxGenJS 代码转换器 · 设计文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-light: #444;
+    --ink-faint: #888;
+    --paper: #f7f4ef;
+    --paper-warm: #efe9df;
+    --accent: #c0392b;
+    --accent-dim: #e8b4b0;
+    --accent-bg: #fdf0ef;
+    --full: #1a6b3c;
+    --full-bg: #eaf5ee;
+    --degrade: #8b5e00;
+    --degrade-bg: #fdf6e3;
+    --skip: #555;
+    --skip-bg: #f0f0f0;
+    --warn-red: #c0392b;
+    --warn-yellow: #b8860b;
+    --warn-green: #1a6b3c;
+    --border: #d6cfc4;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Noto Serif SC', serif;
+    --sans: 'Noto Sans SC', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.9;
+    font-weight: 300;
+  }
+
+  /* ── 侧边栏导航 ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0;
+    width: 220px;
+    height: 100vh;
+    background: var(--ink);
+    color: #ccc;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 32px 0 48px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  nav .nav-logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-dim);
+    letter-spacing: 0.08em;
+    padding: 0 20px 28px;
+    border-bottom: 1px solid #333;
+    line-height: 1.6;
+  }
+
+  nav ul {
+    list-style: none;
+    padding: 20px 0;
+    flex: 1;
+  }
+
+  nav ul li a {
+    display: block;
+    padding: 6px 20px;
+    color: #999;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    transition: color 0.2s, background 0.2s;
+    border-left: 2px solid transparent;
+  }
+
+  nav ul li a:hover,
+  nav ul li a.active {
+    color: #fff;
+    background: #2a2a2a;
+    border-left-color: var(--accent);
+  }
+
+  nav ul li.section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #555;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 16px 20px 4px;
+  }
+
+  /* ── 主内容区 ── */
+  main {
+    margin-left: 220px;
+    min-height: 100vh;
+  }
+
+  /* ── 封面 Hero ── */
+  .hero {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 80px 64px 72px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(192,57,43,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .hero h1 span {
+    color: var(--accent-dim);
+  }
+
+  .hero-desc {
+    font-size: 14px;
+    color: #aaa;
+    max-width: 520px;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  .hero-meta {
+    margin-top: 36px;
+    display: flex;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #666;
+  }
+
+  .hero-meta span strong {
+    color: #bbb;
+    display: block;
+    margin-bottom: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  /* ── 改动提示横幅 ── */
+  .revision-banner {
+    background: #fff8e1;
+    border-left: 4px solid #f0a500;
+    padding: 14px 24px;
+    font-size: 13px;
+    color: #6b4c00;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .revision-banner .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── 内容区域 ── */
+  .content {
+    max-width: 860px;
+    padding: 64px 64px 96px;
+  }
+
+  /* ── 章节标题 ── */
+  .section {
+    margin-bottom: 72px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 36px 0 12px;
+    color: var(--ink);
+  }
+
+  p {
+    color: var(--ink-light);
+    margin-bottom: 14px;
+    max-width: 700px;
+  }
+
+  strong { color: var(--ink); font-weight: 500; }
+
+  /* ── 核心哲学 ── */
+  .philosophy-card {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin: 24px 0;
+  }
+
+  .philosophy-card .quote {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    border-left: 3px solid var(--accent);
+    padding-left: 16px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .phil-layers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .phil-layer {
+    background: #2a2a2a;
+    border-radius: 3px;
+    padding: 16px;
+  }
+
+  .phil-layer .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    margin-bottom: 8px;
+  }
+
+  .phil-layer p {
+    font-size: 13px;
+    color: #aaa;
+    max-width: none;
+    margin: 0;
+    line-height: 1.7;
+  }
+
+  /* ── 功能矩阵表格 ── */
+  .matrix-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .matrix-tab {
+    padding: 10px 20px;
+    font-size: 12.5px;
+    font-family: var(--mono);
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+
+  .matrix-tab.active-full { color: var(--full); border-bottom-color: var(--full); background: var(--full-bg); }
+  .matrix-tab.active-degrade { color: var(--degrade); border-bottom-color: var(--degrade); background: var(--degrade-bg); }
+  .matrix-tab.active-skip { color: var(--skip); border-bottom-color: #999; background: var(--skip-bg); }
+
+  .matrix-panel { display: none; }
+  .matrix-panel.active { display: block; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 0;
+  }
+
+  .table-full { background: var(--full-bg); }
+  .table-degrade { background: var(--degrade-bg); }
+  .table-skip { background: var(--skip-bg); }
+
+  th {
+    text-align: left;
+    padding: 11px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .table-full th { color: var(--full); }
+  .table-degrade th { color: var(--degrade); }
+  .table-skip th { color: var(--skip); }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    color: var(--ink-light);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  td:first-child {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  /* ── 架构图 ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 24px 0;
+    max-width: 480px;
+  }
+
+  .pipeline-item {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .pipeline-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  .pipeline-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    margin-top: 16px;
+  }
+
+  .pipeline-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border);
+    margin: 2px 0;
+  }
+
+  .pipeline-box {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 4px 0;
+    background: white;
+  }
+
+  .pipeline-box .box-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .pipeline-box .box-desc {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin: 0;
+    max-width: none;
+    line-height: 1.6;
+  }
+
+  .pipeline-input, .pipeline-output {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: center;
+    padding: 10px 16px;
+    border-radius: 3px;
+    margin: 4px 0 4px 40px;
+  }
+
+  .pipeline-input {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .pipeline-output {
+    background: var(--full-bg);
+    color: var(--full);
+    border: 1px solid #b2d8be;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .pipeline-output span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── 决策卡片 ── */
+  .decision-card {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .decision-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--paper-warm);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .decision-card-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+
+  .decision-card-title {
+    font-family: var(--serif);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .decision-card-body {
+    padding: 16px 18px;
+    background: white;
+  }
+
+  .decision-card-body p {
+    font-size: 13.5px;
+    margin-bottom: 10px;
+    max-width: none;
+  }
+
+  .decision-card-body p:last-child { margin-bottom: 0; }
+
+  .fallback-steps {
+    counter-reset: step;
+    list-style: none;
+    margin: 10px 0;
+  }
+
+  .fallback-steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+
+  .fallback-steps li::before {
+    content: counter(step);
+    background: var(--ink);
+    color: white;
+    font-family: var(--mono);
+    font-size: 10px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── 改进标注 ── */
+  .improvement {
+    border-left: 3px solid;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+  }
+
+  .improvement.high {
+    border-color: var(--warn-red);
+    background: #fdf0ef;
+    color: #6b1010;
+  }
+
+  .improvement.medium {
+    border-color: var(--warn-yellow);
+    background: #fdf6e3;
+    color: #5a3d00;
+  }
+
+  .improvement.low {
+    border-color: var(--warn-green);
+    background: #eaf5ee;
+    color: #0d3d22;
+  }
+
+  .improvement-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .improvement p {
+    font-size: 13px;
+    margin: 4px 0 0;
+    max-width: none;
+    color: inherit;
+    line-height: 1.7;
+  }
+
+  /* ── CLI 参数 ── */
+  .cli-cmd {
+    background: var(--ink);
+    color: #a8d8a8;
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 18px 24px;
+    border-radius: 4px;
+    margin: 16px 0;
+    letter-spacing: 0.02em;
+  }
+
+  .cli-cmd .prompt { color: #666; margin-right: 8px; }
+
+  /* ── 技术选型 ── */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .tech-card {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: white;
+    position: relative;
+  }
+
+  .tech-card.flagged {
+    border-color: var(--warn-yellow);
+    background: #fdf6e3;
+  }
+
+  .tech-layer {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .tech-name {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .tech-reason {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  .tech-flag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--warn-yellow);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── 测试策略 ── */
+  .test-block {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .test-block-header {
+    background: var(--paper-warm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .test-block-body {
+    padding: 14px 16px;
+    background: white;
+    font-size: 13.5px;
+    color: var(--ink-light);
+  }
+
+  .roundtrip-steps {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .rt-step {
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .rt-arrow { color: var(--ink-faint); font-size: 14px; }
+
+  /* ── 局限性 ── */
+  .limits-list {
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .limits-list li {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    color: var(--ink-light);
+    align-items: flex-start;
+  }
+
+  .limits-list li:last-child { border-bottom: none; }
+
+  .limit-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+    margin-top: 3px;
+    width: 24px;
+  }
+
+  /* ── 输出目录 ── */
+  .file-tree {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    line-height: 2;
+    color: var(--ink-light);
+  }
+
+  .file-tree .dir { color: var(--ink); font-weight: 500; }
+  .file-tree .comment { color: var(--ink-faint); font-size: 11.5px; }
+
+  /* ── 属性优先级表 ── */
+  .priority-chain {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 12px 0 16px;
+    flex-wrap: wrap;
+  }
+
+  .priority-node {
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--ink);
+    position: relative;
+  }
+
+  .priority-node:first-child { border-radius: 3px 0 0 3px; }
+  .priority-node:last-child { border-radius: 0 3px 3px 0; background: var(--skip-bg); color: var(--ink-faint); }
+
+  .priority-arrow {
+    font-size: 16px;
+    color: var(--accent);
+    padding: 0 2px;
+    line-height: 1;
+  }
+
+  .priority-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ── xml2js 配置块 ── */
+  pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--ink);
+    color: #a8d8a8;
+    padding: 20px 24px;
+    border-radius: 4px;
+    overflow-x: auto;
+    line-height: 1.8;
+    margin: 12px 0;
+  }
+
+  pre .kw { color: #c792ea; }
+  pre .str { color: #c3e88d; }
+  pre .com { color: #546e7a; }
+  pre .num { color: #f78c6c; }
+  pre .key { color: #82aaff; }
+
+  /* ── 回应式 ── */
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; }
+    .content { padding: 32px 24px 64px; }
+    .hero { padding: 48px 24px; }
+    .phil-layers { grid-template-columns: 1fr; }
+    .tech-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 侧边导航 -->
+<nav>
+  <div class="nav-logo">pptx2js<br>设计文档</div>
+  <ul>
+    <li class="section-label">概述</li>
+    <li><a href="#s1">一、项目定位</a></li>
+    <li><a href="#s1-dist">　发布形态</a></li>
+    <li><a href="#s2">二、功能矩阵</a></li>
+    <li class="section-label">架构</li>
+    <li><a href="#s3">三、系统架构</a></li>
+    <li><a href="#s4">四、关键决策</a></li>
+    <li><a href="#s5">五、输出结构</a></li>
+    <li class="section-label">接口与实现</li>
+    <li><a href="#s6">六、CLI 接口</a></li>
+    <li><a href="#s7">七、技术选型</a></li>
+    <li><a href="#s8">八、测试策略</a></li>
+    <li class="section-label">边界</li>
+    <li><a href="#s9">九、已知局限</a></li>
+  </ul>
+</nav>
+
+<main>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-label">设计文档 · 草稿</div>
+    <h1>PPTX → PptxGenJS<br><span>代码转换器</span></h1>
+    <p class="hero-desc">一个 Node.js 工具，输入 <code style="font-family:var(--mono);font-size:13px;color:#ccc">.pptx</code> 文件路径，输出一份可直接运行的 PptxGenJS 生成脚本及媒体资源文件夹。以 npm 包形式发布，同时提供编程 API 与 CLI 两种使用方式。</p>
+    <div class="hero-meta">
+      <span><strong>运行环境</strong>Node.js</span>
+      <span><strong>发布形态</strong>npm 包 + GitHub 开源</span>
+      <span><strong>输出格式</strong>PptxGenJS JS 脚本</span>
+      <span><strong>还原目标</strong>可接受且可运行</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- §1 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">§ 01</span>
+        <span class="section-title">项目定位与核心哲学</span>
+      </div>
+
+      <div class="philosophy-card">
+        <div class="quote">"PptxGenJS 能力边界即转换边界"</div>
+        <div class="phil-layers">
+          <div class="phil-layer">
+            <div class="tag">能做的</div>
+            <p>精确转。PptxGenJS API 能原生支持的一比一精确映射：文本框、图片、基本形状、纯色填充、表格、图表。</p>
+          </div>
+          <div class="phil-layer">
+            <div class="tag">做不好的</div>
+            <p>退化转。渐变→纯色、复杂动画→淡入、SmartArt→截图（或提取文本列表）作为 fallback。</p>
+          </div>
+          <div class="phil-layer">
+            <div class="tag">做不了的</div>
+            <p>静默跳过。ActiveX、OLE 嵌入对象、3D 模型、VBA 宏、嵌入字体直接丢弃，日志记录但不中断流程。</p>
+          </div>
+        </div>
+      </div>
+
+      <h3>不做什么</h3>
+      <ul style="list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 0;">
+        <li style="font-size:13px;color:var(--ink-light);padding:8px 12px;background:white;border:1px solid var(--border);border-radius:3px;">✗ 不做双向转换（js 回 .pptx）</li>
+        <li style="font-size:13px;color:var(--ink-light);padding:8px 12px;background:white;border:1px solid var(--border);border-radius:3px;">✗ 不做在线平台或图形界面</li>
+        <li style="font-size:13px;color:var(--ink-light);padding:8px 12px;background:white;border:1px solid var(--border);border-radius:3px;">✗ 不对 PptxGenJS 做扩展或补丁</li>
+        <li style="font-size:13px;color:var(--ink-light);padding:8px 12px;background:white;border:1px solid var(--border);border-radius:3px;">✗ 不追求 100% 像素级还原度</li>
+      </ul>
+      <h3 id="s1-dist">发布形态</h3>
+      <p>工具以 <strong>npm 包</strong>形式发布，同时托管在 GitHub 作为开源项目。两种使用方式共用同一套核心逻辑，互不干扰：</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
+        <div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+          <div style="background:var(--ink);color:var(--paper);padding:12px 16px;font-family:var(--mono);font-size:12px;letter-spacing:0.05em;">CLI 使用方式</div>
+          <div style="background:white;padding:14px 16px;">
+            <div style="font-family:var(--mono);font-size:12px;background:var(--paper-warm);border:1px solid var(--border);border-radius:3px;padding:10px 14px;color:var(--ink);margin-bottom:10px;">npx pptx2js input.pptx -o ./out</div>
+            <p style="font-size:13px;color:var(--ink-faint);margin:0;max-width:none;line-height:1.7;">面向非集成场景：一次性文件转换、本地批处理、快速验证。无需写代码，安装即用。</p>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+          <div style="background:var(--ink);color:var(--paper);padding:12px 16px;font-family:var(--mono);font-size:12px;letter-spacing:0.05em;">编程 API 使用方式</div>
+          <div style="background:white;padding:14px 16px;">
+            <div style="font-family:var(--mono);font-size:12px;background:var(--paper-warm);border:1px solid var(--border);border-radius:3px;padding:10px 14px;color:var(--ink);margin-bottom:10px;line-height:1.8;"><span style="color:#8b5e00">const</span> { convert } = <span style="color:#8b5e00">require</span>(<span style="color:#1a6b3c">'pptx2js'</span>);<br><span style="color:#8b5e00">await</span> convert(filePath, options);</div>
+            <p style="font-size:13px;color:var(--ink-faint);margin:0;max-width:none;line-height:1.7;">面向集成场景：CI/CD 流程、Electron 应用、自动化脚本，可编程控制转换选项和结果处理。</p>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--ink-faint)"><code style="font-family:var(--mono);font-size:11px">package.json</code> 同时声明 <code style="font-family:var(--mono);font-size:11px">main</code>（库入口 <code style="font-family:var(--mono);font-size:11px">lib/index.js</code>）和 <code style="font-family:var(--mono);font-size:11px">bin</code>（CLI 入口 <code style="font-family:var(--mono);font-size:11px">bin/pptx2js.js</code>），CLI 层只是对核心 API 的薄封装，不含独立逻辑。</p>
+    </section>
+
+    <!-- §2 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">§ 02</span>
+        <span class="section-title">功能清单与转换策略矩阵</span>
+      </div>
+
+      <div class="matrix-tabs">
+        <button class="matrix-tab active-full" onclick="switchTab('full', this)">✓ 精确转换层</button>
+        <button class="matrix-tab" onclick="switchTab('degrade', this)">⚡ 退化转换层</button>
+        <button class="matrix-tab" onclick="switchTab('skip', this)">○ 静默跳过层</button>
+      </div>
+
+      <!-- 精确转换 -->
+      <div class="matrix-panel active" id="panel-full">
+        <table class="table-full">
+          <thead><tr><th>PPTX 元素</th><th>PptxGenJS API</th><th>转换策略</th></tr></thead>
+          <tbody>
+            <tr><td>文本框（单段）</td><td>addText()</td><td>直接映射位置、字号、颜色、对齐、边距</td></tr>
+            <tr><td>文本框（多段多格式）</td><td>addText([{text, options}])</td><td>逐 &lt;a:r&gt; 解析，每段独立格式化</td></tr>
+            <tr><td>项目符号 / 编号列表</td><td>bullet: true / {type:'number'}</td><td>解析 &lt;a:buChar&gt; 和 &lt;a:buAutoNum&gt;</td></tr>
+            <tr><td>图片（PNG/JPEG/GIF）</td><td>addImage({path, x, y, w, h})</td><td>提取至 media/ 目录，引用相对路径</td></tr>
+            <tr><td>纯色背景</td><td>defineSlideMaster({background})</td><td>解析 &lt;a:solidFill&gt; 的 srgbClr</td></tr>
+            <tr><td>矩形、圆角矩形、椭圆</td><td>addShape(pptx.shapes.*)</td><td>映射 &lt;a:prstGeom&gt; 到预设形状名</td></tr>
+            <tr><td>线条</td><td>addShape(pptx.shapes.LINE)</td><td>解析 &lt;a:ln&gt; 宽度和颜色</td></tr>
+            <tr><td>表格</td><td>addTable(rows)</td><td>逐格映射文本、边框、填充、合并</td></tr>
+            <tr><td>图表（柱/折线/饼）</td><td>addChart(pptx.charts.*)</td><td>提取 &lt;c:chart&gt; 数据系列和分类轴</td></tr>
+            <tr><td>超链接（文本内）</td><td>hyperlink: {url: '...'}</td><td>解析 &lt;a:hlinkClick&gt; 的 r:id</td></tr>
+            <tr><td>幻灯片尺寸</td><td>pptx.defineLayout()</td><td>从 presentation.xml 的 sldSz 提取</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 退化转换 -->
+      <div class="matrix-panel" id="panel-degrade">
+        <table class="table-degrade">
+          <thead><tr><th>PPTX 元素</th><th>退化策略</th><th>退化原因</th></tr></thead>
+          <tbody>
+            <tr><td>渐变填充</td><td>取第一个色标颜色作纯色填充</td><td>PptxGenJS 渐变 API 有限</td></tr>
+            <tr><td>图片填充背景</td><td>转为 addImage() 置于最底层</td><td>defineSlideMaster 背景图片支持有限</td></tr>
+            <tr><td>SmartArt</td><td>①缓存 PNG→图片插入；②无缓存→提取文本节点为列表；③无文本→占位矩形</td><td>PptxGenJS 无 SmartArt 概念</td></tr>
+            <tr><td>复杂动画</td><td>全部退化为 fade 0.5s</td><td>PptxGenJS 动画 API 极其有限</td></tr>
+            <tr><td>3D 旋转/透视</td><td>丢弃 3D 属性，保留平面位置</td><td>不支持</td></tr>
+            <tr><td>形状阴影/发光/反射</td><td>丢弃特效，保留基础形状</td><td>不支持</td></tr>
+            <tr><td>自定义几何形状</td><td>退化为矩形，尺寸不变</td><td>prstGeom 无法映射则 fallback</td></tr>
+            <tr><td>嵌入 Excel 图表</td><td>有缓存图片则提取，否则跳过</td><td>无法链接外部 OLE 数据</td></tr>
+            <tr><td>双字节/特殊字体</td><td>警告输出，字体名保留</td><td>输出依赖宿主环境字体</td></tr>
+            <tr><td>幻灯片过渡动画</td><td>丢弃</td><td>PptxGenJS 过渡支持极弱</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 跳过 -->
+      <div class="matrix-panel" id="panel-skip">
+        <table class="table-skip">
+          <thead><tr><th>元素类型</th><th>跳过原因</th></tr></thead>
+          <tbody>
+            <tr><td>ActiveX / 表单元素</td><td>无对应 API，无可用 fallback</td></tr>
+            <tr><td>OLE 嵌入对象（非图表类）</td><td>无法提取为可用内容</td></tr>
+            <tr><td>VBA 宏 / 嵌入脚本</td><td>运行时逻辑，无法静态转换</td></tr>
+            <tr><td>嵌入字体（.fntdata）</td><td>PptxGenJS 不支持字体打包</td></tr>
+            <tr><td>演讲者备注</td><td>PptxGenJS 备注支持有限（可选项）</td></tr>
+            <tr><td>空占位符</td><td>无 &lt;a:t&gt; 且无图片引用</td></tr>
+            <tr><td>3D 模型（.glb）</td><td>不支持</td></tr>
+            <tr><td>墨迹批注</td><td>无法向量化还原</td></tr>
+            <tr><td>时间线 / 触发器动画</td><td>PptxGenJS 无触发器概念</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- §3 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">§ 03</span>
+        <span class="section-title">系统架构</span>
+      </div>
+      <p>整个工具由六个独立模块组成流水线，各模块除主链强顺序依赖外，其余可并行设计。</p>
+
+      <div class="pipeline">
+        <div class="pipeline-input">📄 input.pptx</div>
+        <div class="pipeline-item">
+          <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
+          <div class="pipeline-box"><div class="box-title">① 解压与索引</div><div class="box-desc">JSZip 解压，建立文件清单；解析 [Content_Types].xml 和 _rels/*.rels 构建关系 ID 映射</div></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
+          <div class="pipeline-box"><div class="box-title">② XML 预解析</div><div class="box-desc">xml2js 批量解析关键 XML（统一配置），构建内存对象树；仅解析转换所需文件</div></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
+          <div class="pipeline-box"><div class="box-title">③ 实体提取器</div><div class="box-desc">遍历幻灯片 spTree，能力检查矩阵标记 FULL / DEGRADE / SKIP；完成三层属性合并</div></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
+          <div class="pipeline-box"><div class="box-title">④ 映射引擎</div><div class="box-desc">翻译为平台无关 IR；完成 EMU→英寸转换、颜色规范化（含主题色解析）、Z-order 排序</div></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
+          <div class="pipeline-box"><div class="box-title">⑤ 代码生成器</div><div class="box-desc">IR 序列化为格式化 JS；自实现缩进层级拼接（不依赖 Prettier）</div></div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
+          <div class="pipeline-box"><div class="box-title">⑥ 资源打包器</div><div class="box-desc">复制 media/ 文件；处理重名冲突；写入退化生成图片</div></div>
+        </div>
+        <div class="pipeline-output">
+          <span>📄 output.js</span>
+          <span>🖼 media/</span>
+          <span>📋 conversion.log</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- §4 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">§ 04</span>
+        <span class="section-title">关键难点与设计决策</span>
+      </div>
+
+      <!-- 4.1 母版继承 -->
+      <div class="decision-card">
+        <div class="decision-card-header">
+          <span class="decision-card-num">4.1</span>
+          <span class="decision-card-title">母版与版式的继承链</span>
+        </div>
+        <div class="decision-card-body">
+          <p>PPTX 继承链：<code style="font-family:var(--mono);font-size:12px">slideMaster → slideLayout → slide</code>。一个文本框可能只有少数属性写在 slide 层，其余继承自 layout 和 master 层。</p>
+          <p>属性解析在实体提取器阶段完成，合并后的实体带完整属性进入映射引擎。</p>
+
+          <div class="improvement high">
+            <div class="improvement-label">⚠ 实现注意 — 属性合并是最易出 bug 的环节</div>
+            <p>多个占位符 idx 对应、版式层缺失对应 sp 等情况极易引发静默错误。须明确定义属性合并优先级，并在代码中显式处理每一层缺失的情况：</p>
+          </div>
+
+          <div class="priority-label" style="margin-top:12px">属性合并优先级（高 → 低）</div>
+          <div class="priority-chain">
+            <div class="priority-node">slide 层 &lt;p:sp&gt;</div>
+            <div class="priority-arrow">›</div>
+            <div class="priority-node">slideLayout 层对应 &lt;p:sp&gt;</div>
+            <div class="priority-arrow">›</div>
+            <div class="priority-node">slideMaster 层对应 &lt;p:sp&gt;</div>
+            <div class="priority-arrow">›</div>
+            <div class="priority-node">PptxGenJS 默认值</div>
+          </div>
+          <p style="font-size:13px;color:var(--ink-faint)">匹配依据：占位符 <code style="font-family:var(--mono);font-size:11px">&lt;p:ph idx="N"&gt;</code> 相同的 idx 值。若 layout 层无匹配 sp，直接向上追溯至 master 层，不报错。</p>
+        </div>
+      </div>
+
+      <!-- 4.2 SmartArt -->
+      <div class="decision-card">
+        <div class="decision-card-header">
+          <span class="decision-card-num">4.2</span>
+          <span class="decision-card-title">SmartArt 的退化处理</span>
+        </div>
+        <div class="decision-card-body">
+          <p>SmartArt 在 PPTX 中是 <code style="font-family:var(--mono);font-size:12px">&lt;dgm:relIds&gt;</code> 引用的 Diagram 数据，PptxGenJS 完全无法处理。</p>
+
+          <div class="improvement high">
+            <div class="improvement-label">⚠ 实现注意 — 次选策略须提取文本而非留空</div>
+            <p>若次选直接生成空占位矩形，用户将完全丢失 SmartArt 中的信息。应从 <code style="font-family:var(--mono);font-size:11px">dgm:data</code> 提取 <code style="font-family:var(--mono);font-size:11px">&lt;a:t&gt;</code> 文本节点，退化为带编号的文本列表，保留内容可读性。</p>
+          </div>
+
+          <ol class="fallback-steps">
+            <li><strong>优先：</strong>检查 slideN.xml.rels 中是否有与 SmartArt 关联的 .png 缓存图片（PowerPoint 原生生成），有则作为图片插入，尺寸与原 SmartArt 一致。</li>
+            <li><strong>次选：</strong>无缓存图片时，从 dgm:data XML 中提取所有 &lt;a:t&gt; 文本节点，生成带编号的 addText() 列表，占位原始区域。同时在日志中记录原始节点结构摘要。</li>
+            <li><strong>兜底：</strong>若 dgm:data 也无法读取，生成占位矩形 + "[SmartArt 无法解析]" 文本，并在转换日志中标注 severity: error。</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 4.3 图表 -->
+      <div class="decision-card">
+        <div class="decision-card-header">
+          <span class="decision-card-num">4.3</span>
+          <span class="decision-card-title">图表的处理</span>
+        </div>
+        <div class="decision-card-body">
+          <p>PptxGenJS 的 addChart() 支持约 10 种类型（BAR、LINE、PIE、SCATTER 等），无法覆盖 PowerPoint 20+ 种图表（瀑布图、树状图、漏斗图等）。</p>
+          <p>对不支持的类型：检查是否有缓存图片，有则图片插入；无则占位文本 + 日志警告。对支持的类型，从 &lt;c:chart&gt; XML 提取分类轴数据（&lt;c:cat&gt;）、数据系列（&lt;c:ser&gt;）、图表标题（&lt;c:chartTitle&gt;）。</p>
+        </div>
+      </div>
+
+      <!-- 4.4 组合形状 -->
+      <div class="decision-card">
+        <div class="decision-card-header">
+          <span class="decision-card-num">4.4</span>
+          <span class="decision-card-title">组合形状的展平</span>
+        </div>
+        <div class="decision-card-body">
+          <p>PPTX 的 &lt;p:grpSp&gt; 拥有自己的坐标系（子形状坐标相对于组合原点），且支持嵌套。</p>
+          <p>策略：递归展平。将子元素的相对坐标加上组合的 &lt;a:off&gt; 偏移，转换为绝对坐标后作为独立形状输出。嵌套组合递归处理，展平后按原始出现顺序排列以保留 Z-order。</p>
+        </div>
+      </div>
+
+      <!-- 4.5 表格 -->
+      <div class="decision-card">
+        <div class="decision-card-header">
+          <span class="decision-card-num">4.5</span>
+          <span class="decision-card-title">表格的映射</span>
+        </div>
+        <div class="decision-card-body">
+          <p>PptxGenJS 的 addTable() 支持度较高，映射相对直接。</p>
+          <ul style="list-style:none;margin:8px 0;display:flex;flex-direction:column;gap:6px">
+            <li style="font-size:13px;color:var(--ink-light)">· 从 &lt;a:tblGrid&gt; 提取列宽</li>
+            <li style="font-size:13px;color:var(--ink-light)">· 从 &lt;a:tr&gt; 逐行提取 &lt;a:tc&gt; 单元格，每格内 &lt;a:r&gt; 独立格式化</li>
+            <li style="font-size:13px;color:var(--ink-light)">· 合并单元格：解析 rowSpan / gridSpan 属性，映射到 PptxGenJS 的 merge 格式</li>
+            <li style="font-size:13px;color:var(--ink-light)">· 单元格边框：从 &lt;a:tcPr&gt; 的 lnL / lnR / lnT / lnB 提取</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4.6 xml2js 配置 (新增) -->
+      <div class="decision-card">
+        <div class="decision-card-header">
+          <span class="decision-card-num">4.6</span>
+          <span class="decision-card-title">xml2js 统一配置规范</span>
+        </div>
+        <div class="decision-card-body">
+          <div class="improvement high">
+            <div class="improvement-label">⚠ 实现注意 — 全项目必须使用统一解析配置</div>
+            <p>xml2js 对命名空间前缀（如 <code style="font-family:var(--mono);font-size:11px">a:r</code> vs <code style="font-family:var(--mono);font-size:11px">r</code>）的处理极为脆弱，不同模块若使用不同配置会导致解析结果不一致。全项目必须使用以下统一配置，通过单一入口文件导出，禁止在模块内自行实例化解析器：</p>
+          </div>
+<pre><span class="com">// xml-parser.js — 项目唯一导出的解析器实例</span>
+<span class="kw">const</span> xml2js = <span class="kw">require</span>(<span class="str">'xml2js'</span>);
+
+<span class="kw">const</span> PARSER_OPTIONS = {
+  <span class="key">explicitArray</span>: <span class="num">false</span>,     <span class="com">// 单子节点不包裹数组</span>
+  <span class="key">mergeAttrs</span>: <span class="num">false</span>,       <span class="com">// 属性保留在 $ 键下，不合并</span>
+  <span class="key">explicitCharkey</span>: <span class="num">false</span>,  <span class="com">// 纯文本节点直接为字符串</span>
+  <span class="key">tagNameProcessors</span>: [],   <span class="com">// 保留原始命名空间前缀</span>
+  <span class="key">attrNameProcessors</span>: [],  <span class="com">// 属性名不做处理</span>
+  <span class="key">xmlns</span>: <span class="num">false</span>              <span class="com">// 不展开命名空间 URI</span>
+};
+
+<span class="kw">module.exports</span> = {
+  parseXml: (str) => xml2js.parseStringPromise(str, PARSER_OPTIONS)
+};</pre>
+          <p style="font-size:13px;color:var(--ink-faint);margin-top:8px">所有模块必须通过此统一入口解析 XML，禁止在模块内自行实例化解析器。访问节点时统一使用带命名空间前缀的键名，如 <code style="font-family:var(--mono);font-size:11px">node['a:r']</code>。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- §5 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">§ 05</span>
+        <span class="section-title">输出目录结构</span>
+      </div>
+
+      <div class="file-tree">
+        <span class="dir">pptx2js-output/</span><br>
+        ├── <span class="dir">output.js</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 主生成脚本，可直接 node 运行</span><br>
+        ├── <span class="dir">media/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 媒体资源文件夹</span><br>
+        │&nbsp;&nbsp; ├── image1.png<br>
+        │&nbsp;&nbsp; ├── image2.jpeg<br>
+        │&nbsp;&nbsp; └── ...<br>
+        ├── <span class="dir">conversion.log</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 详细转换报告（JSON 格式）</span><br>
+        └── <span class="dir">README.md</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 自动生成的说明文件</span>
+      </div>
+
+      <h3>conversion.log 结构</h3>
+      <p>JSON 格式，包含以下字段：</p>
+      <div class="improvement low">
+        <div class="improvement-label">设计说明 — 补充机器可读字段以支持 CI 集成</div>
+        <p>每个退化/跳过条目新增 <code style="font-family:var(--mono);font-size:11px">slideIndex</code>、<code style="font-family:var(--mono);font-size:11px">elementBounds</code>（位置信息）、<code style="font-family:var(--mono);font-size:11px">severity</code>（warn / error）三个字段，方便外部脚本或 CI 流程处理转换结果。</p>
+      </div>
+      <table style="margin-top:12px">
+        <thead><tr><th>字段</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>source</td><td>源文件信息（路径、大小、幻灯片数）</td></tr>
+          <tr><td>statistics</td><td>汇总：总幻灯片数、精确转换数、退化数、跳过数</td></tr>
+          <tr><td>slides[]</td><td>按幻灯片组织的详细清单，每项含 slideIndex、elementBounds、decision、severity</td></tr>
+          <tr><td>degraded[]</td><td>退化项列表，含原始结构摘要、退化方式、severity</td></tr>
+          <tr><td>omitted[]</td><td>跳过项列表，含元素类型、跳过原因、severity</td></tr>
+          <tr><td>warnings[]</td><td>全局警告（缺失字体、无法解析的结构等）</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §6 -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">§ 06</span>
+        <span class="section-title">CLI 接口设计</span>
+      </div>
+
+      <div class="cli-cmd"><span class="prompt">$</span>pptx2js input.pptx -o ./output-dir [options]</div>
+
+      <div class="improvement medium">
+        <div class="improvement-label">设计说明 — --strict 按严重性拆分，避免误触</div>
+        <p>单一 <code style="font-family:var(--mono);font-size:11px">--strict</code> 无法区分"空占位符被跳过"和"核心图表无法转换"这两种完全不同的严重性。拆分为 <code style="font-family:var(--mono);font-size:11px">--strict-degrade</code> 和 <code style="font-family:var(--mono);font-size:11px">--strict-skip</code> 两个独立选项，分别控制。</p>
+      </div>
+
+      <table style="margin-top:16px">
+        <thead><tr><th>参数</th><th>默认值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>input.pptx</td><td>必填</td><td>源 PPTX 文件路径</td></tr>
+          <tr><td>-o, --output</td><td>./pptx2js-output</td><td>输出目录</td></tr>
+          <tr><td>--no-media</td><td>false</td><td>不提取媒体文件，图片引用变占位注释</td></tr>
+          <tr><td>--strict-degrade</td><td>false</td><td>任意退化项触发非零退出码</td></tr>
+          <tr><td>--strict-skip</td><td>false</td><td>severity:error 级别的跳过项触发非零退出码</td></tr>
+          <tr><td>--log-level</td><td>info</td><td>日志详细程度：minimal / info / verbose</td></tr>
+          <tr><td>--max-file-size</td><td>50MB</td><td>超过此阈值时切换为逐幻灯片流式解析</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §7 -->
+    <section class="section" id="s7">
+      <div class="section-header">
+        <span class="section-num">§ 07</span>
+        <span class="section-title">技术选型</span>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-layer">ZIP 处理</div>
+          <div class="tech-name">JSZip</div>
+          <div class="tech-reason">成熟稳定，PptxGenJS 同款依赖，无需额外引入</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">XML 解析</div>
+          <div class="tech-name">xml2js</div>
+          <div class="tech-reason">将 XML 转为原生 JS 对象。必须使用 §4.6 规定的统一配置</div>
+        </div>
+        <div class="tech-card flagged">
+          <div class="tech-layer">代码格式化</div>
+          <div class="tech-name">自实现缩进拼接</div>
+          <div class="tech-reason">生成时按层次直接拼接字符串，无额外依赖</div>
+          <div class="tech-flag">替代 Prettier — 约 10MB 体积 + 大文件格式化耗时数秒，性价比低</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">图片提取</div>
+          <div class="tech-name">原生 fs + Buffer</div>
+          <div class="tech-reason">无需额外依赖，直接读 ZIP 中的二进制</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">CLI 框架</div>
+          <div class="tech-name">Commander.js</div>
+          <div class="tech-reason">轻量，标准选择，支持子命令和参数验证</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">日志</div>
+          <div class="tech-name">chalk + console</div>
+          <div class="tech-reason">彩色 CLI 输出，无需重量级日志库</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-layer">测试</div>
+          <div class="tech-name">Jest</div>
+          <div class="tech-reason">单元测试 + 集成往返验证。配合真实 PPT 语料库（见 §8）</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- §8 -->
+    <section class="section" id="s8">
+      <div class="section-header">
+        <span class="section-num">§ 08</span>
+        <span class="section-title">测试策略</span>
+      </div>
+
+      <div class="test-block">
+        <div class="test-block-header">
+          <span>8.1 &nbsp;单元测试</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-faint)">Jest</span>
+        </div>
+        <div class="test-block-body">
+          每个模块独立测试，输入为标准 XML 片段（直接用字符串），验证 IR 输出正确性。重点覆盖：属性继承合并、EMU 坐标换算、颜色主题解析、SmartArt 三层 fallback 分支。
+        </div>
+      </div>
+
+      <div class="test-block">
+        <div class="test-block-header">
+          <span>8.2 &nbsp;集成测试：往返验证</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-faint)">最重要</span>
+        </div>
+        <div class="test-block-body">
+          <div class="roundtrip-steps">
+            <span class="rt-step">golden.js</span>
+            <span class="rt-arrow">→</span>
+            <span class="rt-step">golden.pptx</span>
+            <span class="rt-arrow">→</span>
+            <span class="rt-step">pptx2js 转换</span>
+            <span class="rt-arrow">→</span>
+            <span class="rt-step">generated.js</span>
+            <span class="rt-arrow">→</span>
+            <span class="rt-step">roundtrip.pptx</span>
+          </div>
+          <p style="margin-top:10px">解压对比 golden.pptx 和 roundtrip.pptx 中 slide1.xml 的文本/位置/颜色是否一致，允许浮点舍入误差（±0.001 英寸）。</p>
+        </div>
+      </div>
+
+      <div class="test-block">
+        <div class="test-block-header">
+          <span>8.3 &nbsp;退化/跳过覆盖测试</span>
+        </div>
+        <div class="test-block-body">
+          专门测试 PPTX 文件包含 SmartArt、复杂动画、3D 模型等，验证工具不崩溃、日志 severity 字段正确、退化输出合理。
+        </div>
+      </div>
+
+      <div class="test-block">
+        <div class="test-block-header">
+          <span>8.4 &nbsp;真实语料库回归测试</span>
+        </div>
+        <div class="test-block-body">
+          <div class="improvement medium">
+            <div class="improvement-label">设计说明 — 手工金标准无法覆盖真实边界情况</div>
+            <p>手工制作的金标准只能测到预想到的情况，真实 PPT 的复杂组合无法预判，需要真实语料库作为补充。</p>
+          </div>
+          <p style="margin-top:8px">收集 5–10 份真实业务 PPT（去除敏感信息），加入回归测试集。每次 PR 合并后自动运行转换，CI 检查 conversion.log 中 severity:error 数量是否超出阈值；关键幻灯片由人工目视对比（截图 diff）。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- §9 -->
+    <section class="section" id="s9">
+      <div class="section-header">
+        <span class="section-num">§ 09</span>
+        <span class="section-title">已知局限与显式声明</span>
+      </div>
+
+      <ul class="limits-list">
+        <li>
+          <span class="limit-num">L1</span>
+          <span><strong>字体完全依赖宿主环境。</strong>代码中会写 fontFace: "思源黑体"，但若运行环境未安装该字体，PowerPoint 会回退到默认字体。这是 PptxGenJS 本身的局限，工具不负责字体检测或打包。</span>
+        </li>
+        <li>
+          <span class="limit-num">L2</span>
+          <span><strong>动画还原度低。</strong>所有动画退化为淡入 0.5 秒，这是设计取舍而非缺陷。</span>
+        </li>
+        <li>
+          <span class="limit-num">L3</span>
+          <span><strong>不保证二进制一致性。</strong>往返生成的 PPTX 与原始 PPTX 逐字节不同（XML 空白、命名空间前缀、元素顺序不同），但视觉呈现应一致。</span>
+        </li>
+        <li>
+          <span class="limit-num">L4</span>
+          <span><strong>不处理受密码保护的 PPTX。</strong>加密文件直接报错退出，提示用户先解密。</span>
+        </li>
+        <li>
+          <span class="limit-num">L5</span>
+          <span><strong>不处理 .ppt 格式（97-2003 旧格式）。</strong>仅支持 .pptx（OOXML）。</span>
+        </li>
+        <li>
+          <span class="limit-num">L6</span>
+          <span><strong>不支持增量转换。</strong>每次转换都是全量重写，不支持"保留已有 JS 代码，只转换新增幻灯片"。</span>
+        </li>
+        <li>
+          <span class="limit-num">L7</span>
+          <span><strong>大文件内存限制。</strong>全量 XML 解析对 200MB+ 大型 PPT 可能造成内存压力。超过 50MB 时自动切换为逐幻灯片流式解析（详见 CLI 参数 --max-file-size）。</span>
+        </li>
+      </ul>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+  function switchTab(type, btn) {
+    document.querySelectorAll('.matrix-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.matrix-tab').forEach(t => {
+      t.classList.remove('active-full', 'active-degrade', 'active-skip');
+    });
+    document.getElementById('panel-' + type).classList.add('active');
+    btn.classList.add('active-' + type);
+  }
+
+  // 高亮当前导航项
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
