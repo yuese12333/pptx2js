@@ -14,9 +14,12 @@
     "pptx",
     "pptxgenjs",
     "converter",
-    "powerpoint"
+    "powerpoint",
+    "presentation",
+    "nodejs",
+    "cli"
   ],
-  "author": "",
+  "author": "yuese12333",
   "license": "MIT",
   "engines": {
     "node": ">=18"
@@ -32,6 +35,7 @@
   },
   "files": [
     "lib",
-    "bin"
+    "bin",
+    "README.md"
   ]
 }
