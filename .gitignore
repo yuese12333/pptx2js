@@ -1,4 +1,5 @@
 node_modules/
+testppt/
 pptx2js-output/
 coverage/
 *.log

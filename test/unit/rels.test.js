@@ -12,6 +12,12 @@ describe('rels', () => {
     );
   });
 
+  it('resolveTargetPath 解析 PptxGenJS 包根绝对路径 /ppt/charts/...', () => {
+    expect(
+      resolveTargetPath('ppt/slides/slide4.xml', '/ppt/charts/chart1.xml')
+    ).toBe('ppt/charts/chart1.xml');
+  });
+
   it('relsOwnerPath 处理包根 _rels/.rels', () => {
     expect(resolveTargetPath('', 'ppt/presentation.xml')).toBe('ppt/presentation.xml');
     expect(relsOwnerPath('_rels/.rels')).toBe('');

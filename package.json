@@ -1,6 +1,6 @@
 {
   "name": "pptx2js",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "将 .pptx 文件转换为可运行的 PptxGenJS 生成脚本",
   "main": "lib/index.js",
   "bin": {
@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:sample": "npm run generate --prefix testPPT && node bin/pptx2js.js testppt/sample.pptx -o testppt/pptx2js-output"
   },
   "keywords": [
     "pptx",
