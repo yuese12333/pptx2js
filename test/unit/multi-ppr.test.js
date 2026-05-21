@@ -1,5 +1,5 @@
 const { parseXml } = require('../../lib/xml-parser');
-const { extractTextRuns } = require('../../lib/extractor');
+const { extractTextRuns } = require('../../lib/text-utils');
 
 describe('multiple a:pPr in one paragraph', () => {
   it('?? run ??????? pPr?? algn?', () => {

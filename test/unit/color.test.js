@@ -1,6 +1,9 @@
 const { parseXml } = require('../../lib/xml-parser');
-const { resolveFillColor, DEFAULT_SCHEME } = require('../../lib/utils/color');
-
+const {
+  resolveFillColor,
+  resolveColorFromContainer,
+  DEFAULT_SCHEME,
+} = require('../../lib/color');
 describe('color', () => {
   it('??????? a:srgbClr', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -89,5 +92,28 @@ describe('color', () => {
     const doc = parseXml(xml);
     const { color } = resolveFillColor(doc, DEFAULT_SCHEME);
     expect(color).toBe('385724');
+  });
+
+  it('prstClr black resolves', () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<a:solidFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:prstClr val="black"/>
+</a:solidFill>`;
+    const doc = parseXml(xml);
+    expect(resolveColorFromContainer(doc, DEFAULT_SCHEME)).toBe('000000');
+  });
+
+  it('sysClr applies lumMod and lumOff', () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<a:solidFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <a:sysClr val="windowText" lastClr="000000">
+    <a:lumMod val="85000"/>
+    <a:lumOff val="15000"/>
+  </a:sysClr>
+</a:solidFill>`;
+    const doc = parseXml(xml);
+    const color = resolveColorFromContainer(doc, DEFAULT_SCHEME);
+    expect(color).toBeTruthy();
+    expect(color).not.toBe('000000');
   });
 });

@@ -1,5 +1,5 @@
 const { parseXml } = require('../../lib/xml-parser');
-const { extractTextRuns } = require('../../lib/extractor');
+const { extractTextRuns } = require('../../lib/text-utils');
 
 describe('txBody lstStyle', () => {
   it('从 a:txBody/a:lstStyle/defPPr 读取默认 align', async () => {

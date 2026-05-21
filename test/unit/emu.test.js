@@ -1,4 +1,4 @@
-const { emuToInch, inchToEmu, EMU_PER_INCH } = require('../../lib/utils/emu');
+const { emuToInch, inchToEmu, EMU_PER_INCH } = require('../../lib/bounds');
 
 describe('emu', () => {
   it('EMU 与英寸双向换算', () => {

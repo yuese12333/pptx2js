@@ -2,7 +2,7 @@ const { parseXml } = require('../../lib/xml-parser');
 const { buildRelationIndex } = require('../../lib/rels');
 const { child, children, documentRoot } = require('../../lib/xml-utils');
 const { buildSlideInheritance, getEffectiveXfrm } = require('../../lib/placeholder');
-const { boundsFromXfrm } = require('../../lib/utils/bounds');
+const { boundsFromXfrm } = require('../../lib/bounds');
 
 describe('placeholder grpSp walk', () => {
   const layoutXml = `<?xml version="1.0" encoding="UTF-8"?>

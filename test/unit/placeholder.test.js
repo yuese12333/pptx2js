@@ -69,7 +69,7 @@ describe('placeholder', () => {
     const slide = documentRoot(parsed['ppt/slides/slide1.xml'], 'p:sld');
     const sp = children(child(child(slide, 'p:cSld'), 'p:spTree'), 'p:sp')[0];
     const xfrm = getEffectiveXfrm(sp, inheritance);
-    const { boundsFromXfrm } = require('../../lib/utils/bounds');
+    const { boundsFromXfrm } = require('../../lib/bounds');
     const bounds = boundsFromXfrm(xfrm);
 
     expect(bounds.w).toBeGreaterThan(5);

@@ -536,7 +536,7 @@
     </p>
     <div class="hero-meta">
       <span><strong>运行环境</strong>Node.js ≥ 18</span>
-      <span><strong>版本</strong>v0.4.0</span>
+      <span><strong>版本</strong>v0.4.3</span>
       <span><strong>许可</strong>MIT</span>
       <span><strong>仓库</strong>GitHub 开源</span>
     </div>
@@ -585,19 +585,22 @@
 
     <!-- 转换能力 -->
     <section class="section" id="capabilities">
-      <div class="section-header"><h2 class="section-title">当前转换能力（v0.4.0）</h2></div>
+      <div class="section-header"><h2 class="section-title">当前转换能力（v0.4.3）</h2></div>
       <table>
         <thead><tr><th>元素</th><th>状态</th><th>说明</th></tr></thead>
         <tbody>
-          <tr><td>文本框（段落对齐、lvl 缩进、段距、行距、列表、超链接）</td><td><span class="badge badge-full">精确</span></td><td><code>addText()</code></td></tr>
-          <tr><td>图片</td><td><span class="badge badge-full">精确</span></td><td><code>addImage()</code></td></tr>
-          <tr><td>表格（含单元格边框）</td><td><span class="badge badge-full">精确</span></td><td><code>addTable()</code></td></tr>
-          <tr><td>图表 BAR/LINE/PIE/AREA/DOUGHNUT/SCATTER/RADAR/BUBBLE</td><td><span class="badge badge-full">精确</span></td><td><code>addChart()</code></td></tr>
-          <tr><td>形状 / 背景 / 组合</td><td><span class="badge badge-full">精确</span></td><td><code>addShape()</code> 等</td></tr>
-          <tr><td>母版/版式占位符</td><td><span class="badge badge-full">精确</span></td><td><code>placeholder.js</code></td></tr>
-          <tr><td>SmartArt</td><td><span class="badge badge-degrade">退化</span></td><td>文本列表或占位；缓存 PNG 暂不实现</td></tr>
-          <tr><td>渐变 / 未知形状</td><td><span class="badge badge-degrade">退化</span></td><td>首色标、矩形 fallback</td></tr>
-          <tr><td>不支持图表</td><td><span class="badge badge-degrade">退化</span></td><td>缓存图或占位文本</td></tr>
+          <tr><td>文本框（段落对齐、lvl、段距/行距 <code>spcPct</code>、列表、超链接）</td><td><span class="badge badge-full">精确</span></td><td><code>addText()</code>；<code>lstStyle</code>/<code>defRPr</code> 继承</td></tr>
+          <tr><td>图片</td><td><span class="badge badge-full">精确</span></td><td><code>addImage()</code>；<code>media/</code> 重名自动后缀</td></tr>
+          <tr><td>表格（含单元格边框）</td><td><span class="badge badge-full">精确</span></td><td><code>addTable()</code>；<code>text-utils.js</code></td></tr>
+          <tr><td>图表 BAR/LINE/PIE/AREA/DOUGHNUT/SCATTER/RADAR/BUBBLE</td><td><span class="badge badge-full">精确</span></td><td><code>addChart()</code>；散点图 <code>c:xVal</code></td></tr>
+          <tr><td>预设形状 / 线条（虚线、<code>flipH</code>/<code>flipV</code>）</td><td><span class="badge badge-full">精确</span></td><td><code>addShape()</code>；<code>spTree</code> 文档顺序</td></tr>
+          <tr><td>母版/版式装饰形状</td><td><span class="badge badge-full">精确</span></td><td>master → layout → slide 层叠</td></tr>
+          <tr><td>纯色 / 渐变 / <code>prstClr</code> / <code>sysClr</code> 背景</td><td><span class="badge badge-full">精确</span></td><td><code>p:bgPr</code>、<code>p:bgRef</code>；系统色修饰符</td></tr>
+          <tr><td>母版/版式占位符继承</td><td><span class="badge badge-full">精确</span></td><td>xfrm、<code>txBody</code>/<code>lstStyle</code> 合并</td></tr>
+          <tr><td>组合形状（<code>p:grpSp</code>）</td><td><span class="badge badge-full">精确</span></td><td>无 <code>p:spTree</code> 时直接展平</td></tr>
+          <tr><td>SmartArt</td><td><span class="badge badge-degrade">退化</span></td><td>文本列表或占位</td></tr>
+          <tr><td>渐变填充 / 弯曲连接线</td><td><span class="badge badge-degrade">退化</span></td><td>首色标；<code>bentConnector3</code>→直线</td></tr>
+          <tr><td>不支持图表类型</td><td><span class="badge badge-degrade">退化</span></td><td>缓存图或占位文本</td></tr>
           <tr><td>复杂动画</td><td><span class="badge badge-plan">计划</span></td><td>design.html</td></tr>
         </tbody>
       </table>
@@ -631,7 +634,7 @@
           <tr><td>--strict-degrade</td><td>false</td><td>任意退化项触发非零退出码</td></tr>
           <tr><td>--strict-skip</td><td>false</td><td><code>severity:error</code> 跳过项触发非零退出码</td></tr>
           <tr><td>--log-level</td><td>info</td><td><code>minimal</code> / <code>info</code> / <code>verbose</code></td></tr>
-          <tr><td>--max-file-size</td><td>50MB</td><td>超过阈值切换流式解析（实现中）</td></tr>
+          <tr><td>--max-file-size</td><td>50MB</td><td>超过阈值抛出错误（避免静默 OOM）</td></tr>
         </tbody>
       </table>
 
@@ -697,15 +700,17 @@ console.log(result.log.statistics);</pre>
         </div>
         <div class="pipeline-step">
           <div class="pipeline-connector"><div class="pipeline-dot"></div><div class="pipeline-line"></div></div>
-          <div class="pipeline-box"><strong>⑤ 代码生成器</strong> — lib/codegen.js</div>
+          <div class="pipeline-box"><strong>⑥ 资源打包器</strong> — lib/packager.js（先于代码生成，更新 IR 中 mediaPath）</div>
         </div>
         <div class="pipeline-step">
           <div class="pipeline-connector"><div class="pipeline-dot"></div></div>
-          <div class="pipeline-box"><strong>⑥ 资源打包器</strong> — lib/packager.js</div>
+          <div class="pipeline-box"><strong>⑤ 代码生成器</strong> — lib/codegen.js</div>
         </div>
         <div class="pipeline-io out">output.js + media/ + conversion.log</div>
       </div>
-      <p style="margin-top:16px;font-size:13px;color:var(--ink-faint)">辅助模块：<code>lib/presentation.js</code>、<code>lib/graphic.js</code>、<code>lib/smartart.js</code>、<code>lib/xml-utils.js</code>、<code>lib/utils/color.js</code>、<code>lib/utils/bounds.js</code></p>
+      <p style="margin-top:16px;font-size:13px;color:var(--ink-faint)">辅助模块：<code>lib/presentation.js</code>、<code>lib/graphic.js</code>、<code>lib/xml-utils.js</code>、<code>lib/color.js</code>、<code>lib/bounds.js</code>、<code>lib/text-utils.js</code>、<code>lib/run-utils.js</code>、<code>lib/table.js</code>、<code>lib/chart.js</code>、<code>lib/smartart.js</code></p>
+      <h3 style="margin-top:24px;font-size:15px;font-weight:600">XML 节点模型（OONode）</h3>
+      <p style="font-size:13px;color:var(--ink-light)">自研 <code>lib/xml-parser.js</code>，节点结构 <code>{ tag, attrs, children, text }</code>。<code>childNodes</code> 保留文档顺序（Z 轴与段落内 <code>pPr</code>/<code>r</code> 顺序）。</p>
     </section>
 
     <!-- 技术栈 -->
@@ -715,7 +720,7 @@ console.log(result.log.statistics);</pre>
         <thead><tr><th>用途</th><th>选型</th></tr></thead>
         <tbody>
           <tr><td>ZIP 处理</td><td><a href="https://www.npmjs.com/package/jszip" target="_blank" rel="noopener">JSZip</a></td></tr>
-          <tr><td>XML 解析</td><td><a href="https://www.npmjs.com/package/xml2js" target="_blank" rel="noopener">xml2js</a>（统一配置，见 <code>lib/xml-parser.js</code>）</td></tr>
+          <tr><td>XML 解析</td><td>自研 <code>lib/xml-parser.js</code>（无 xml2js 运行时依赖）</td></tr>
           <tr><td>CLI</td><td><a href="https://www.npmjs.com/package/commander" target="_blank" rel="noopener">Commander.js</a></td></tr>
           <tr><td>终端输出</td><td><a href="https://www.npmjs.com/package/chalk" target="_blank" rel="noopener">chalk</a></td></tr>
           <tr><td>测试</td><td><a href="https://jestjs.io/" target="_blank" rel="noopener">Jest</a>（单元 + 集成）</td></tr>
@@ -727,28 +732,31 @@ console.log(result.log.statistics);</pre>
     <!-- 开发 -->
     <section class="section" id="dev">
       <div class="section-header"><h2 class="section-title">开发</h2></div>
-      <pre class="shell"><span class="prompt">$</span>npm test              <span class="com" style="color:#666"># 24 用例（单元 + 集成）</span>
+      <pre class="shell"><span class="prompt">$</span>npm test              <span class="com" style="color:#666"># 51 用例（29 套件，单元 + 集成）</span>
 <span class="prompt">$</span>npm run test:watch    <span class="com" style="color:#666"># 监听模式</span></pre>
 
       <h3>目录结构</h3>
       <pre class="tree">pptx2js/
 ├── bin/pptx2js.js          # CLI 入口
-├── lib/
-│   ├── convert.js           # 流水线编排
-│   ├── unpacker.js          # ① 解压
-│   ├── xml-parser.js        # ② 统一 XML 解析
-│   ├── rels.js              # ② 关系索引
-│   ├── presentation.js      # 幻灯片列表 / 尺寸
-│   ├── placeholder.js       # 母版/版式占位符
-│   ├── graphic.js           # graphicFrame 识别
-│   ├── table.js             # 表格提取
-│   ├── chart.js             # 图表提取
-│   ├── smartart.js          # SmartArt 退化
-│   ├── extractor.js         # ③ 实体提取
-│   ├── mapper.js            # ④ IR 映射
-│   ├── codegen.js           # ⑤ 代码生成
-│   ├── packager.js          # ⑥ 资源打包
-│   └── utils/               # EMU、颜色
+├── lib/                    # 20 个模块（扁平布局）
+│   ├── index.js            # 库入口
+│   ├── convert.js          # 流水线编排
+│   ├── unpacker.js         # ① 解压
+│   ├── xml-parser.js       # ② OONode 解析
+│   ├── xml-utils.js        # child / children / childNodes
+│   ├── rels.js             # ② 关系索引
+│   ├── presentation.js     # 幻灯片列表 / 尺寸
+│   ├── placeholder.js      # 母版/版式继承与装饰层
+│   ├── text-utils.js       # 文本 run 提取
+│   ├── color.js            # 颜色（srgb/scheme/prst/sys）
+│   ├── bounds.js           # EMU 与 xfrm 边界
+│   ├── graphic.js          # graphicFrame 识别
+│   ├── table.js / chart.js / smartart.js
+│   ├── extractor.js        # ③ 实体提取
+│   ├── mapper.js           # ④ IR 映射
+│   ├── codegen.js          # ⑤ 代码生成
+│   ├── packager.js         # ⑥ 资源打包
+│   └── run-utils.js        # run 合并与压缩
 ├── test/
 │   ├── unit/
 │   ├── integration/
@@ -762,14 +770,14 @@ console.log(result.log.statistics);</pre>
       <div class="section-header"><h2 class="section-title">已知局限</h2></div>
       <ul class="limits-list">
         <li><span class="limit-num">L1</span><span><strong>字体</strong>依赖运行环境，不负责检测或打包嵌入字体</span></li>
-        <li><span class="limit-num">L2</span><span><strong>母版继承</strong>已实现 xfrm 与基础 txBody；复杂列表样式继承仍有限；<code>a:spcPct</code> 百分比段距/行距暂不处理</span></li>
+        <li><span class="limit-num">L2</span><span><strong>母版继承</strong>已实现装饰层与 <code>lstStyle</code>/<code>defRPr</code>；复杂列表/多主题样式仍可能不完整</span></li>
         <li><span class="limit-num">L3</span><span><strong>SmartArt</strong> 仅文本列表退化，缓存图片因 PPT 版本差异未实现</span></li>
         <li><span class="limit-num">L4</span><span><strong>动画</strong>尚未转换（设计为退化淡入，待实现）</span></li>
         <li><span class="limit-num">L5</span><span><strong>不保证</strong>往返 PPTX 二进制一致，追求视觉可接受</span></li>
         <li><span class="limit-num">L6</span><span><strong>不支持</strong>密码保护或 <code>.ppt</code> 旧格式</span></li>
         <li><span class="limit-num">L7</span><span><strong>不支持</strong>增量转换，每次全量重写</span></li>
-        <li><span class="limit-num">L8</span><span><strong>大文件</strong>流式解析仍在实现中</span></li>
-        <li><span class="limit-num">L9</span><span><strong>媒体重名</strong>同名文件可能互相覆盖（packager 待去重）</span></li>
+        <li><span class="limit-num">L8</span><span><strong>大文件</strong>超过 <code>--max-file-size</code> 会直接报错，需调高阈值或拆分</span></li>
+        <li><span class="limit-num">L9</span><span><strong>非标 OOXML</strong>无 XML 前缀的文档可能解析失败</span></li>
       </ul>
     </section>
 
@@ -777,7 +785,7 @@ console.log(result.log.statistics);</pre>
     <section class="section" id="status">
       <div class="section-header"><h2 class="section-title">项目状态</h2></div>
       <div class="status-banner">
-        当前为 <strong>v0.4.0</strong>：在 v0.3.0 基础上新增段落级格式、表格单元格边框、扩展图表类型、SmartArt 文本列表退化。复杂动画、SmartArt 缓存图、外部链接表格等按 <a href="./design.html" style="color:var(--accent)">design.html</a> 继续推进，欢迎贡献。
+        当前为 <strong>v0.4.3</strong>：母版/版式装饰层按 Z 轴叠加；<code>lstStyle</code>/<code>defRPr</code> 与 <code>prstClr</code>/<code>sysClr</code> 颜色；<code>spcPct</code> 段距；形状 <code>flipH</code>/<code>flipV</code>；<code>lib/utils</code> 合并为 <code>lib/color.js</code>、<code>lib/bounds.js</code>。复杂动画、部分连接器与 SmartArt 图形化按 <a href="./design.html" style="color:var(--accent)">design.html</a> 继续推进，欢迎贡献。
       </div>
       <p class="license" style="margin-top:32px;border:none;padding:0">License: MIT</p>
     </section>
