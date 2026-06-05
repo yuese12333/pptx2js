@@ -5,8 +5,9 @@ const {
 } = require('../../lib/run-utils');
 
 describe('run-utils', () => {
-  it('compressRunOptions 剔除默认黑色与简化 underline', () => {
+  it('compressRunOptions 保留显式黑色并简化 underline', () => {
     expect(compressRunOptions({ color: '000000', underline: { style: 'sng' } })).toEqual({
+      color: '000000',
       underline: true,
     });
   });

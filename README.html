@@ -513,6 +513,7 @@
     <li><a href="#dev">开发</a></li>
     <li class="section-label">其他</li>
     <li><a href="#limits">已知局限</a></li>
+    <li><a href="#roadmap">路线图</a></li>
     <li><a href="#status">项目状态</a></li>
   </ul>
   <div class="nav-footer">
@@ -530,6 +531,8 @@
       文件转换为可直接运行的
       <a href="https://github.com/gitbrent/PptxGenJS" target="_blank" rel="noopener">PptxGenJS</a>
       生成脚本，并附带媒体资源与转换报告。
+      <strong style="color:#ddd">当前</strong>生成的 <code style="background:#333;color:#ccc;padding:2px 6px;border-radius:2px">output.js</code> 需配合 PptxGenJS 运行；
+      <strong style="color:#ddd">后续</strong>将制作 <strong style="color:#ddd">js2pptx</strong> 工具，从脚本或中间表示直接写回 <code style="background:#333;color:#ccc;padding:2px 6px;border-radius:2px">.pptx</code>，从而脱离对 PptxGenJS 的依赖。
     </p>
     <p class="hero-desc" style="margin-top:12px;font-size:13px">
       <a href="./design.html">设计文档</a> · <a href="./README.md">Markdown 版</a>
@@ -561,12 +564,12 @@
           <tr class="row-degrade">
             <td>退化转换</td>
             <td>尽力保留内容，降级为近似表示</td>
-            <td>渐变→纯色、未知形状→矩形</td>
+            <td>渐变→纯色、图案填充→前景色、未知形状→矩形</td>
           </tr>
           <tr class="row-skip">
             <td>静默跳过</td>
             <td>记录日志，不中断流程</td>
-            <td>图表/表格框架、ActiveX、OLE、VBA</td>
+            <td>不支持的 graphicFrame、ActiveX、OLE、VBA</td>
           </tr>
         </tbody>
       </table>
@@ -577,9 +580,9 @@
       <div class="section-header"><h2 class="section-title">功能特性</h2></div>
       <ul class="feature-list">
         <li>输入 <code>.pptx</code>，输出 <code>output.js</code> + <code>media/</code> + <code>conversion.log</code> + 自动生成说明</li>
-        <li>同时提供 <strong>CLI</strong> 与 <strong>编程 API</strong>，共用同一套核心逻辑</li>
+        <li><strong>CLI</strong> 与 <strong>编程 API</strong> 共用同一套六模块流水线</li>
         <li>转换报告为 JSON，含 <code>slideIndex</code>、<code>elementBounds</code>、<code>severity</code>，便于 CI 集成</li>
-        <li>仅支持 OOXML（<code>.pptx</code>），不做双向转换、不做 GUI</li>
+        <li>仅支持 OOXML（<code>.pptx</code>），当前为单向 pptx→js；后续 <strong>js2pptx</strong> 实现 js→pptx，不做 GUI</li>
       </ul>
     </section>
 
@@ -589,19 +592,24 @@
       <table>
         <thead><tr><th>元素</th><th>状态</th><th>说明</th></tr></thead>
         <tbody>
-          <tr><td>文本框（段落对齐、lvl、段距/行距 <code>spcPct</code>、列表、超链接）</td><td><span class="badge badge-full">精确</span></td><td><code>addText()</code>；<code>lstStyle</code>/<code>defRPr</code> 继承</td></tr>
-          <tr><td>图片</td><td><span class="badge badge-full">精确</span></td><td><code>addImage()</code>；<code>media/</code> 重名自动后缀</td></tr>
-          <tr><td>表格（含单元格边框）</td><td><span class="badge badge-full">精确</span></td><td><code>addTable()</code>；<code>text-utils.js</code></td></tr>
-          <tr><td>图表 BAR/LINE/PIE/AREA/DOUGHNUT/SCATTER/RADAR/BUBBLE</td><td><span class="badge badge-full">精确</span></td><td><code>addChart()</code>；散点图 <code>c:xVal</code></td></tr>
-          <tr><td>预设形状 / 线条（虚线、<code>flipH</code>/<code>flipV</code>）</td><td><span class="badge badge-full">精确</span></td><td><code>addShape()</code>；<code>spTree</code> 文档顺序</td></tr>
-          <tr><td>母版/版式装饰形状</td><td><span class="badge badge-full">精确</span></td><td>master → layout → slide 层叠</td></tr>
-          <tr><td>纯色 / 渐变 / <code>prstClr</code> / <code>sysClr</code> 背景</td><td><span class="badge badge-full">精确</span></td><td><code>p:bgPr</code>、<code>p:bgRef</code>；系统色修饰符</td></tr>
-          <tr><td>母版/版式占位符继承</td><td><span class="badge badge-full">精确</span></td><td>xfrm、<code>txBody</code>/<code>lstStyle</code> 合并</td></tr>
-          <tr><td>组合形状（<code>p:grpSp</code>）</td><td><span class="badge badge-full">精确</span></td><td>无 <code>p:spTree</code> 时直接展平</td></tr>
-          <tr><td>SmartArt</td><td><span class="badge badge-degrade">退化</span></td><td>文本列表或占位</td></tr>
-          <tr><td>渐变填充 / 弯曲连接线</td><td><span class="badge badge-degrade">退化</span></td><td>首色标；<code>bentConnector3</code>→直线</td></tr>
-          <tr><td>不支持图表类型</td><td><span class="badge badge-degrade">退化</span></td><td>缓存图或占位文本</td></tr>
-          <tr><td>复杂动画</td><td><span class="badge badge-plan">计划</span></td><td>design.html</td></tr>
+          <tr><td>文本框（run 格式、段落对齐、<code>lvl</code>、段距/行距、<code>spcPct</code>、列表、超链接）</td><td><span class="badge badge-full">精确</span></td><td><code>addText()</code>；<code>lstStyle</code>/<code>defRPr</code> 继承（优先 <code>lvl1pPr</code>）；<code>indentLevel</code> 限制 0–8</td></tr>
+          <tr><td>文本框 <code>bodyPr</code>（垂直对齐、换行）</td><td><span class="badge badge-full">精确</span></td><td><code>anchor</code>→<code>valign</code>；<code>wrap="none"</code>→<code>wrap: false</code></td></tr>
+          <tr><td>图片（PNG/JPEG 等）</td><td><span class="badge badge-full">精确</span></td><td><code>addImage()</code>；<code>media/</code> 重名自动 <code>name_2.ext</code></td></tr>
+          <tr><td>表格（内联 <code>a:tbl</code>、单元格样式与四边边框）</td><td><span class="badge badge-full">精确</span></td><td><code>addTable()</code>；深色单元格背景自动补白字；四边边框分别输出</td></tr>
+          <tr><td>图表 BAR/LINE/PIE/AREA/DOUGHNUT/SCATTER/RADAR/BUBBLE</td><td><span class="badge badge-full">精确</span></td><td><code>addChart()</code>；散点图 <code>c:xVal</code>；graphicFrame URI 精确匹配</td></tr>
+          <tr><td>预设形状 / 线条（虚线、<code>flipH</code>/<code>flipV</code>）</td><td><span class="badge badge-full">精确</span></td><td><code>addShape()</code>；<code>spTree</code> 文档顺序；<code>flowChartDecision</code>→菱形</td></tr>
+          <tr><td>形状填充回退</td><td><span class="badge badge-full">精确</span></td><td><code>spPr</code> 无填充时读取 <code>p:style/a:fillRef</code></td></tr>
+          <tr><td>母版/版式装饰形状</td><td><span class="badge badge-full">精确</span></td><td>master → layout → slide 层叠；母版无填充纯文本装饰（页脚等）不重复渲染</td></tr>
+          <tr><td>纯色 / 渐变首色标 / 图案前景色 / <code>prstClr</code> / <code>sysClr</code></td><td><span class="badge badge-full">精确</span></td><td><code>p:bgPr</code>、<code>p:bgRef</code>；lumMod/shade/tint 等在 HLS 亮度通道运算</td></tr>
+          <tr><td>幻灯片尺寸</td><td><span class="badge badge-full">精确</span></td><td><code>defineLayout()</code></td></tr>
+          <tr><td>组合形状（<code>p:grpSp</code>）</td><td><span class="badge badge-full">精确</span></td><td>无 <code>p:spTree</code> 包装时直接递归展平</td></tr>
+          <tr><td>母版/版式占位符继承</td><td><span class="badge badge-full">精确</span></td><td>xfrm、<code>txBody</code>/<code>lstStyle</code>/<code>defRPr</code> 合并</td></tr>
+          <tr><td>越界元素过滤</td><td><span class="badge badge-full">精确</span></td><td>映射阶段丢弃完全落在幻灯片外的实体</td></tr>
+          <tr><td>SmartArt</td><td><span class="badge badge-degrade">退化</span></td><td>从 <code>dgm:data</code> 提取文本列表，否则占位</td></tr>
+          <tr><td>渐变填充 / 弯曲连接线</td><td><span class="badge badge-degrade">退化</span></td><td>渐变文字/填充取首色标；<code>bentConnector*</code> 连接器退化为直线</td></tr>
+          <tr><td>自定义路径（<code>a:custGeom</code>）</td><td><span class="badge badge-skip">跳过</span></td><td>记录日志，不中断流程</td></tr>
+          <tr><td>不支持图表类型</td><td><span class="badge badge-degrade">退化</span></td><td>图表部件 rels 缓存图或占位文本</td></tr>
+          <tr><td>复杂动画</td><td><span class="badge badge-plan">计划</span></td><td>见 design.html</td></tr>
         </tbody>
       </table>
     </section>
@@ -659,6 +667,9 @@ console.log(result.log.statistics);</pre>
     <section class="section" id="run-output">
       <div class="section-header"><h2 class="section-title">运行生成脚本</h2></div>
       <p><code>output.js</code> 依赖 <a href="https://github.com/gitbrent/PptxGenJS" target="_blank" rel="noopener">PptxGenJS</a>，需在输出目录单独安装：</p>
+      <div class="callout-note">
+        这是 v0.4.x 的过渡方案。后续 <strong>js2pptx</strong> 将支持 <code>node output.js</code> 或直接调用 API 生成 <code>.pptx</code>，无需安装 PptxGenJS。
+      </div>
       <pre class="shell"><span class="prompt">$</span>cd pptx2js-output
 <span class="prompt">$</span>npm init -y
 <span class="prompt">$</span>npm install pptxgenjs
@@ -670,7 +681,7 @@ console.log(result.log.statistics);</pre>
       <div class="section-header"><h2 class="section-title">输出目录结构</h2></div>
       <pre class="tree">pptx2js-output/
 ├── output.js          # 主生成脚本，可直接 node 运行
-├── media/             # 提取的图片等媒体
+├── media/             # 提取的图片等媒体（重名自动加后缀）
 ├── conversion.log     # JSON 格式转换报告
 └── README.md          # 自动生成的说明</pre>
       <p><code>conversion.log</code> 主要字段：<code>source</code>、<code>statistics</code>、<code>slides[]</code>、<code>degraded[]</code>、<code>omitted[]</code>、<code>warnings[]</code>。</p>
@@ -708,9 +719,17 @@ console.log(result.log.statistics);</pre>
         </div>
         <div class="pipeline-io out">output.js + media/ + conversion.log</div>
       </div>
-      <p style="margin-top:16px;font-size:13px;color:var(--ink-faint)">辅助模块：<code>lib/presentation.js</code>、<code>lib/graphic.js</code>、<code>lib/xml-utils.js</code>、<code>lib/color.js</code>、<code>lib/bounds.js</code>、<code>lib/text-utils.js</code>、<code>lib/run-utils.js</code>、<code>lib/table.js</code>、<code>lib/chart.js</code>、<code>lib/smartart.js</code></p>
-      <h3 style="margin-top:24px;font-size:15px;font-weight:600">XML 节点模型（OONode）</h3>
-      <p style="font-size:13px;color:var(--ink-light)">自研 <code>lib/xml-parser.js</code>，节点结构 <code>{ tag, attrs, children, text }</code>。<code>childNodes</code> 保留文档顺序（Z 轴与段落内 <code>pPr</code>/<code>r</code> 顺序）。</p>
+      <p style="margin-top:16px;font-size:13px;color:var(--ink-faint)">辅助模块：<code>lib/presentation.js</code>、<code>lib/graphic.js</code>、<code>lib/xml-utils.js</code>、<code>lib/color.js</code>、<code>lib/bounds.js</code>、<code>lib/run-utils.js</code>、<code>lib/table.js</code>、<code>lib/chart.js</code>、<code>lib/smartart.js</code></p>
+      <h3 style="margin-top:24px;font-size:15px;font-weight:600">XML 节点模型（v0.4.2+）</h3>
+      <p style="font-size:13px;color:var(--ink-light)">自研 <code>lib/xml-parser.js</code>，统一为 <strong>OONode</strong>：<code>{ tag, attrs, children, text }</code></p>
+      <table>
+        <thead><tr><th>API</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td><code>decodeOoxmlText(str)</code></td><td>文本/属性值中的 <code>&amp;amp;</code>、<code>&amp;#39;</code> 等（单次扫描，不处理 <code>_xHHHH_</code>）</td></tr>
+          <tr><td><code>decodeOoxmlName(str)</code></td><td>元素/属性名中的 OOXML <code>_xHHHH_</code> 转义</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13px;color:var(--ink-light);margin-top:12px"><code>lib/xml-utils.js</code>：<code>child</code>、<code>children</code>、<code>childNodes</code>（Z 轴与 <code>pPr</code>/<code>r</code> 顺序）、<code>documentRoot</code></p>
     </section>
 
     <!-- 技术栈 -->
@@ -732,31 +751,31 @@ console.log(result.log.statistics);</pre>
     <!-- 开发 -->
     <section class="section" id="dev">
       <div class="section-header"><h2 class="section-title">开发</h2></div>
-      <pre class="shell"><span class="prompt">$</span>npm test              <span class="com" style="color:#666"># 51 用例（29 套件，单元 + 集成）</span>
+      <pre class="shell"><span class="prompt">$</span>npm test              <span class="com" style="color:#666"># 52 用例（29 套件，单元 + 集成）</span>
 <span class="prompt">$</span>npm run test:watch    <span class="com" style="color:#666"># 监听模式</span></pre>
 
       <h3>目录结构</h3>
       <pre class="tree">pptx2js/
 ├── bin/pptx2js.js          # CLI 入口
 ├── lib/                    # 20 个模块（扁平布局）
-│   ├── index.js            # 库入口
+│   ├── index.js            # 库入口（export convert）
 │   ├── convert.js          # 流水线编排
 │   ├── unpacker.js         # ① 解压
-│   ├── xml-parser.js       # ② OONode 解析
+│   ├── xml-parser.js       # ② OONode XML 解析与 OOXML 实体/命名解码
 │   ├── xml-utils.js        # child / children / childNodes
 │   ├── rels.js             # ② 关系索引
 │   ├── presentation.js     # 幻灯片列表 / 尺寸
 │   ├── placeholder.js      # 母版/版式继承与装饰层
-│   ├── text-utils.js       # 文本 run 提取
-│   ├── color.js            # 颜色（srgb/scheme/prst/sys）
-│   ├── bounds.js           # EMU 与 xfrm 边界
-│   ├── graphic.js          # graphicFrame 识别
+│   ├── text-utils.js       # 文本 run / bodyPr 提取
+│   ├── color.js            # 颜色规范化与 HLS 亮度修饰
+│   ├── bounds.js           # EMU 换算与 xfrm 边界
+│   ├── graphic.js          # graphicFrame URI 识别
 │   ├── table.js / chart.js / smartart.js
 │   ├── extractor.js        # ③ 实体提取
 │   ├── mapper.js           # ④ IR 映射
 │   ├── codegen.js          # ⑤ 代码生成
 │   ├── packager.js         # ⑥ 资源打包
-│   └── run-utils.js        # run 合并与压缩
+│   └── run-utils.js        # run 合并与选项压缩
 ├── test/
 │   ├── unit/
 │   ├── integration/
@@ -770,22 +789,54 @@ console.log(result.log.statistics);</pre>
       <div class="section-header"><h2 class="section-title">已知局限</h2></div>
       <ul class="limits-list">
         <li><span class="limit-num">L1</span><span><strong>字体</strong>依赖运行环境，不负责检测或打包嵌入字体</span></li>
-        <li><span class="limit-num">L2</span><span><strong>母版继承</strong>已实现装饰层与 <code>lstStyle</code>/<code>defRPr</code>；复杂列表/多主题样式仍可能不完整</span></li>
-        <li><span class="limit-num">L3</span><span><strong>SmartArt</strong> 仅文本列表退化，缓存图片因 PPT 版本差异未实现</span></li>
-        <li><span class="limit-num">L4</span><span><strong>动画</strong>尚未转换（设计为退化淡入，待实现）</span></li>
-        <li><span class="limit-num">L5</span><span><strong>不保证</strong>往返 PPTX 二进制一致，追求视觉可接受</span></li>
-        <li><span class="limit-num">L6</span><span><strong>不支持</strong>密码保护或 <code>.ppt</code> 旧格式</span></li>
-        <li><span class="limit-num">L7</span><span><strong>不支持</strong>增量转换，每次全量重写</span></li>
-        <li><span class="limit-num">L8</span><span><strong>大文件</strong>超过 <code>--max-file-size</code> 会直接报错，需调高阈值或拆分</span></li>
-        <li><span class="limit-num">L9</span><span><strong>非标 OOXML</strong>无 XML 前缀的文档可能解析失败</span></li>
+        <li><span class="limit-num">L2</span><span><strong>母版继承</strong>已实现装饰层与 <code>lstStyle</code>/<code>defRPr</code>；复杂列表/多主题/嵌套样式仍可能不完整</span></li>
+        <li><span class="limit-num">L3</span><span><strong>表格样式主题</strong>（<code>tblStyle</code>）未完整实现；深色单元格仅做对比度补偿（白字），非精确主题映射</span></li>
+        <li><span class="limit-num">L4</span><span><strong>SmartArt</strong> 仅文本列表退化，缓存图片路径因 PPT 版本差异未实现</span></li>
+        <li><span class="limit-num">L5</span><span><strong>自定义路径</strong>（<code>a:custGeom</code>）与部分预设形状尚未支持</span></li>
+        <li><span class="limit-num">L6</span><span><strong>动画</strong>尚未转换（设计为退化淡入，待实现）</span></li>
+        <li><span class="limit-num">L7</span><span><strong>不保证</strong>往返 PPTX 二进制一致，追求视觉可接受</span></li>
+        <li><span class="limit-num">L8</span><span><strong>不支持</strong>密码保护或 <code>.ppt</code> 旧格式</span></li>
+        <li><span class="limit-num">L9</span><span><strong>不支持</strong>增量转换，每次全量重写</span></li>
+        <li><span class="limit-num">L10</span><span><strong>大文件</strong>超过 <code>--max-file-size</code> 会直接报错，超大 PPT 需调高阈值或拆分</span></li>
+        <li><span class="limit-num">L11</span><span><strong>默认命名空间</strong>无 XML 前缀的非标 OOXML 可能解析失败</span></li>
       </ul>
+    </section>
+
+    <!-- 路线图 -->
+    <section class="section" id="roadmap">
+      <div class="section-header"><h2 class="section-title">路线图</h2></div>
+      <table>
+        <thead><tr><th>工具</th><th>状态</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>pptx2js</strong></td>
+            <td><span class="badge badge-full">进行中</span></td>
+            <td>pptx → JS 脚本 + 媒体；代码生成目标为 PptxGenJS API</td>
+          </tr>
+          <tr>
+            <td><strong>js2pptx</strong></td>
+            <td><span class="badge badge-plan">计划中</span></td>
+            <td>读取脚本或 IR，直接组装 OOXML/ZIP 输出 <code>.pptx</code>；完成后可脱离 PptxGenJS，形成 pptx ↔ js 闭环</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>js2pptx 与 pptx2js 将共用提取/映射层的中间表示（IR），避免两套语义各写一遍。</p>
     </section>
 
     <!-- 项目状态 -->
     <section class="section" id="status">
       <div class="section-header"><h2 class="section-title">项目状态</h2></div>
       <div class="status-banner">
-        当前为 <strong>v0.4.3</strong>：母版/版式装饰层按 Z 轴叠加；<code>lstStyle</code>/<code>defRPr</code> 与 <code>prstClr</code>/<code>sysClr</code> 颜色；<code>spcPct</code> 段距；形状 <code>flipH</code>/<code>flipV</code>；<code>lib/utils</code> 合并为 <code>lib/color.js</code>、<code>lib/bounds.js</code>。复杂动画、部分连接器与 SmartArt 图形化按 <a href="./design.html" style="color:var(--accent)">design.html</a> 继续推进，欢迎贡献。
+        当前为 <strong>v0.4.3</strong>，近期增强包括：
+        <ul class="feature-list" style="margin-top:12px;margin-bottom:0">
+          <li><strong>颜色</strong>：lumMod / lumOff / shade / tint 改在 HLS 亮度通道运算，更贴近 DrawingML 语义</li>
+          <li><strong>文本</strong>：<code>bodyPr</code> 垂直对齐与换行；显式黑色（<code>000000</code>）保留；<code>defRPr</code> 优先读取 <code>lvl1pPr</code></li>
+          <li><strong>形状/连接器</strong>：<code>fillRef</code> 填充回退；<code>bentConnector*</code> 在连接器路径退化；<code>flowChartDecision</code> 映射；越界实体过滤</li>
+          <li><strong>母版装饰</strong>：母版层无填充纯文本形状（页脚等）跳过，避免与幻灯片内容重复</li>
+          <li><strong>表格</strong>：深色单元格背景自动补白字；四边边框分别 codegen</li>
+          <li><strong>XML</strong>：<code>_xHHHH_</code> 元素名解码与单次实体解码（<code>decodeOoxmlText</code> / <code>decodeOoxmlName</code>）</li>
+        </ul>
+        <p style="margin-top:14px;margin-bottom:0">复杂动画、<code>custGeom</code> 自定义路径与 SmartArt 图形化等待 <a href="./design.html" style="color:var(--accent)">design.html</a> 继续推进，欢迎贡献。</p>
       </div>
       <p class="license" style="margin-top:32px;border:none;padding:0">License: MIT</p>
     </section>

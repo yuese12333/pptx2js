@@ -5,7 +5,7 @@ const {
   DEFAULT_SCHEME,
 } = require('../../lib/color');
 describe('color', () => {
-  it('??????? a:srgbClr', () => {
+  it('渐变填充解析 a:srgbClr 首色标', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:gradFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <a:gsLst>
@@ -18,7 +18,7 @@ describe('color', () => {
     expect(color).toBe('FF6600');
   });
 
-  it('??????? a:schemeClr', () => {
+  it('渐变填充解析 a:schemeClr 首色标', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:gradFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <a:gsLst>
@@ -33,7 +33,7 @@ describe('color', () => {
     expect(color).toBe(DEFAULT_SCHEME.accent1);
   });
 
-  it('????? pos ?????????', () => {
+  it('渐变色标按 pos 升序取最小色标', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:gradFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <a:gsLst>
@@ -46,7 +46,7 @@ describe('color', () => {
     expect(color).toBe('FF6600');
   });
 
-  it('ptnFill ??????', () => {
+  it('ptnFill 图案填充取前景色', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:ptnFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" prst="pct5">
   <a:fgClr><a:srgbClr val="AABBCC"/></a:fgClr>
@@ -58,7 +58,7 @@ describe('color', () => {
     expect(color).toBe('AABBCC');
   });
 
-  it('srgbClr ?? shade ??', () => {
+  it('srgbClr 应用 shade 修饰', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:solidFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <a:srgbClr val="FFFFFF">
@@ -70,7 +70,7 @@ describe('color', () => {
     expect(color).toBe('808080');
   });
 
-  it('schemeClr shade ?? pct ????', () => {
+  it('schemeClr shade 百分比修饰正确', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:solidFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <a:schemeClr val="accent6">
@@ -79,10 +79,10 @@ describe('color', () => {
 </a:solidFill>`;
     const doc = parseXml(xml);
     const { color } = resolveFillColor(doc, DEFAULT_SCHEME);
-    expect(color).toBe('385724');
+    expect(color).toBe('385723');
   });
 
-  it('schemeClr ?? lumMod ??', () => {
+  it('schemeClr 应用 lumMod 修饰', () => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <a:solidFill xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
   <a:schemeClr val="accent6">
@@ -91,7 +91,7 @@ describe('color', () => {
 </a:solidFill>`;
     const doc = parseXml(xml);
     const { color } = resolveFillColor(doc, DEFAULT_SCHEME);
-    expect(color).toBe('385724');
+    expect(color).toBe('385723');
   });
 
   it('prstClr black resolves', () => {
