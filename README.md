@@ -21,7 +21,7 @@
 - 转换报告为 JSON，含 `slideIndex`、`elementBounds`、`severity`，便于 CI 集成
 - 仅支持 OOXML（`.pptx`），当前为单向 pptx→js；后续 **js2pptx** 实现 js→pptx，不做 GUI
 
-## 当前转换能力（v0.4.3）
+## 当前转换能力（v0.4.4）
 
 | 元素 | 状态 | 说明 |
 |------|------|------|
@@ -229,7 +229,7 @@ pptx2js/
 
 ## 项目状态
 
-当前为 **v0.4.3**，近期增强包括：
+当前为 **v0.4.4**，近期增强包括：
 
 - **颜色**：lumMod / lumOff / shade / tint 改在 HLS 亮度通道运算，更贴近 DrawingML 语义  
 - **文本**：`bodyPr` 垂直对齐与换行；显式黑色（`000000`）保留；`defRPr` 优先读取 `lvl1pPr`  
